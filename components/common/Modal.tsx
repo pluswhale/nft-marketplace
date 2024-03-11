@@ -112,14 +112,14 @@ export const Modal = forwardRef<ElementRef<typeof Dialog>, Props>(
             borderBottomLeftRadius: '$borderRadius',
           }}
         >
-          <Anchor href="https://reservoir.tools/" target="_blank">
-            <Text
-              style="body3"
-              css={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
-            >
-              Powered by <Logo />
-            </Text>
-          </Anchor>
+          {/*<Anchor href="https://reservoir.tools/" target="_blank">*/}
+          {/*  <Text*/}
+          {/*    style="body3"*/}
+          {/*    css={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}*/}
+          {/*  >*/}
+          {/*    Powered by OnRamp*/}
+          {/*  </Text>*/}
+          {/*</Anchor>*/}
         </Flex>
       </Dialog>
     )

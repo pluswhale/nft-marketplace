@@ -54,12 +54,12 @@ const WALLET_CONNECT_PROJECT_ID =
   process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || ''
 
 const DISABLE_PROXY =
-  process.env.NEXT_PUBLIC_DISABLE_PROXY === 'true' ? true : false
+  process.env.NEXT_PUBLIC_DISABLE_PROXY === 'true'
 
 const ALCHEMY_API_KEY = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY
 
 const wagmiConfig = getDefaultConfig({
-  appName: 'Reservoir NFT Explorer',
+  appName: 'Art-fusion NFT Marketplace',
   projectId: WALLET_CONNECT_PROJECT_ID,
   chains: (supportedChains.length === 0 ? [mainnet] : supportedChains) as [
     Chain,

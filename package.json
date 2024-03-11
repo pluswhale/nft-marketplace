@@ -37,6 +37,7 @@
     "dayjs": "^1.11.6",
     "eslint-config-next": "^14.1.0",
     "framer-motion": "^6.3.6",
+    "ipfs-http-client": "^60.0.1",
     "lodash": "^4.17.21",
     "next": "^14.1.0",
     "openapi-typescript-fetch": "^1.1.3",
