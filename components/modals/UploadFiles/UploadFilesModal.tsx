@@ -89,13 +89,29 @@ export function UploadFilesModal({onClose}: Props) {
                         const text = e?.target?.result;
                         const json = JSON.parse(text as string);
 
+
+                        // response body {ok: bool, value: cid: string}
                         const response = await uploadFile(
                             imageFile,
                             json?.name ?? '',
                             json?.description ?? '',
                             json?.external_url ?? '',
                             json.attributes ?? '',
-                        )
+                        );
+
+
+
+                        //TODO: POST request to BE(backend) for saving CID of files
+                        // BODY>:
+                        // {
+                        //     userId: 1,
+                        //         itemId: response.cid,
+                        //     name:
+                        //     description:
+                        //         mintend: false
+                        // }
+
+
 
                         console.log('response', response)
 
