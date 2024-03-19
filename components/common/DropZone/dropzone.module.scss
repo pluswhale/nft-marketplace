@@ -1,0 +1,15 @@
+.dropzone {
+  width: 100%;
+  border: 2px dashed darkgrey;
+  padding: 20px;
+  cursor: pointer;
+
+  &__input {
+
+  }
+
+  &__title {
+    color: darkgrey;
+    text-align: center;
+  }
+}

@@ -1,0 +1,3 @@
+{"web":{"client_id":"547662382448-hfeoka57l869i745ude2jcep7t7vhtrk.apps.googleusercontent.com","project_id":"eastern-camp-417611","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"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",
+  "redirect_uris": "http://localhost:3000"
+}}

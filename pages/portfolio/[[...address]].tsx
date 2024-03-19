@@ -40,6 +40,7 @@ import { ToastContext } from 'context/ToastContextProvider'
 import Jazzicon, { jsNumberForAddress } from 'react-jazzicon'
 import { Avatar } from 'components/primitives/Avatar'
 import CopyText from 'components/common/CopyText'
+import CreateNft from "../../components/modals/CreateNFT";
 
 type ActivityTypes = Exclude<
   NonNullable<
@@ -156,9 +157,12 @@ const IndexPage: NextPage = () => {
         case 'activity':
           tab = 'activity'
           break
+        case 'create':
+          tab = 'create'
+          break
       }
     }
-    setTabValue(tab)
+    setTabValue(tab);
   }, [isSmallDevice, router.asPath])
 
   useEffect(() => {
@@ -266,6 +270,7 @@ const IndexPage: NextPage = () => {
                         <TabsTrigger value="listings">Listings</TabsTrigger>
                         <TabsTrigger value="offers">Offers Made</TabsTrigger>
                         <TabsTrigger value="activity">Activity</TabsTrigger>
+                        <TabsTrigger value="create">Create NFT</TabsTrigger>
                       </TabsList>
                     </Flex>
                     <TabsContent value="items">
@@ -416,6 +421,9 @@ const IndexPage: NextPage = () => {
                           />
                         </Box>
                       </Flex>
+                    </TabsContent>
+                    <TabsContent value="create">
+                      <CreateNft/>
                     </TabsContent>
                   </Tabs.Root>
                 </>

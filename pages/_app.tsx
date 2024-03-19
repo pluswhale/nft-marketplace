@@ -40,6 +40,8 @@ import { WagmiProvider, http } from 'wagmi'
 import { chainIdToAlchemyNetworkMap } from 'utils/chainIdToAlchemyNetworkMap'
 import { _transports } from '@rainbow-me/rainbowkit/dist/config/getDefaultConfig'
 import { Chain, mainnet } from 'viem/chains'
+import {Provider} from "react-redux";
+import store from "../redux/store";
 
 //CONFIGURABLE: Use nextjs to load your own custom font: https://nextjs.org/docs/basic-features/font-optimization
 const inter = Inter({
@@ -99,6 +101,9 @@ function AppWrapper(props: AppProps & { baseUrl: string }) {
         light: 'light',
       }}
     >
+      <Provider store={store}>
+
+
       <WagmiProvider config={wagmiConfig}>
         <QueryClientProvider client={queryClient}>
           <ChainContextProvider>
@@ -112,6 +117,7 @@ function AppWrapper(props: AppProps & { baseUrl: string }) {
           </ChainContextProvider>
         </QueryClientProvider>
       </WagmiProvider>
+      </Provider>
     </ThemeProvider>
   )
 }
@@ -219,7 +225,7 @@ function MyApp({
               <Tooltip.Provider>
                 <RainbowKitProvider theme={rainbowKitTheme} modalSize="compact">
                   <ToastContextProvider>
-                    <FunctionalComponent {...pageProps} />
+                          <FunctionalComponent {...pageProps} />
                   </ToastContextProvider>
                 </RainbowKitProvider>
               </Tooltip.Provider>

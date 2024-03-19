@@ -1,0 +1,55 @@
+.container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  padding: 36px;
+  box-sizing: border-box;
+
+  z-index: 999;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--modal-blur-wrapper);
+    backdrop-filter: blur(3px);
+    cursor: pointer;
+  }
+
+  .content {
+    z-index: 1000;
+  }
+}
+
+/* for css transition animations */
+.alert-enter {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.alert-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.alert-exit {
+  opacity: 1;
+}
+
+.alert-exit-active {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* for css transition animations */
