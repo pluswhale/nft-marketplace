@@ -19,9 +19,16 @@ export function UploadFilesModal({onClose}: Props) {
     const [images, setImages] = useState<File[]>([]);
     const [metadatas, setMetadatas] = useState<File[]>([]);
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-    const [isLoadingToIPFS, setIsLoadingToIPFS] = useState<boolean>(false)
+    const [isLoadingToIPFS, setIsLoadingToIPFS] = useState<boolean>(false);
+
+    const [isLoadingImages, setIsLoadingImages] = useState<boolean>(false);
+    const [isLoadingMetadata, setIsLoadingMetadata] = useState<boolean>(false);
+
+    let isLoading = false;
 
     const onDropImages = useCallback((acceptedFiles: File[]) => {
+        setIsLoadingImages(true);
+
         // Filter out files that are already in the state
         const filteredFiles = acceptedFiles.filter((newFile) => {
             return !images.some((existingFile) => existingFile.name === newFile.name && existingFile.size === newFile.size);
@@ -40,9 +47,13 @@ export function UploadFilesModal({onClose}: Props) {
 
         // Update the previewUrls state by appending the new URLs
         setPreviewUrls(prevUrls => [...prevUrls, ...newPreviewUrls]);
+
+        setIsLoadingImages(false);
     }, [images]);
 
     const onDropMetadata = useCallback((acceptedFiles: File[]) => {
+        setIsLoadingMetadata(true);
+
         // Filter out files that are already in the state
         const filteredFiles = acceptedFiles.filter((newFile) => {
             return !metadatas.some((existingFile) => existingFile.name === newFile.name && existingFile.size === newFile.size);
@@ -55,6 +66,8 @@ export function UploadFilesModal({onClose}: Props) {
           const sortedFiles = sortFilesByName(updatedFiles);
 
         setMetadatas(sortedFiles);
+
+        setIsLoadingMetadata(false);
     }, [metadatas]);
 
 
@@ -76,10 +89,11 @@ export function UploadFilesModal({onClose}: Props) {
     }
 
     const handleUploadFiles = async () => {
-        setIsLoadingToIPFS(true);
 
         // Assuming each image corresponds to a metadata file by the same index
         images.forEach((imageFile: File, index: number) => {
+            setIsLoadingToIPFS(true);
+            console.log(isLoadingToIPFS);
             const metadataFile = metadatas[index];
             if (metadataFile) {
                 const reader = new FileReader();
@@ -113,6 +127,7 @@ export function UploadFilesModal({onClose}: Props) {
 
 
 
+                        if(!response?.ok) setIsLoadingToIPFS(false);
                         console.log('response', response)
 
                     } catch (error) {
@@ -126,93 +141,104 @@ export function UploadFilesModal({onClose}: Props) {
 
                 reader.readAsText(metadataFile);
             }
+            // Once all files are processed, reset loading state or proceed with further actions
+            if (index===images.length - 1) setIsLoadingToIPFS(false);
         });
-
-        // Once all files are processed, reset loading state or proceed with further actions
-        setIsLoadingToIPFS(false);
     };
 
 
     return (
-        <div className={styles.container} role={'dialog'}>
-            <div className={styles.overlay} onClick={onClose}></div>
-            <div className={styles.content}>
+      <div className={styles.container} role={'dialog'}>
+        <div className={styles.overlay} onClick={onClose}></div>
+        <div className={styles.content}>
+            {isLoadingToIPFS ?
+                <img
+                    className={styles.loader}
+                    style={{width:'100px', height:'100px'}}
+                    src={`${process.env.NEXT_PUBLIC_HOST_URL}/loaders/loader_round.svg`}
+                    alt="loader"
+                />
+                :<>
                 <div className={styles.images}>
-                    <p>Upload the images</p>
-                    <Dropzone
-                        title={'Drag and drop images or selected in files'}
-                        accept={{
-                            'image/*': ['.jpeg', '.png']
-                        }}
-                        multiple={true}
-                        onDrop={onDropImages}
-                    />
-                    <div className={styles.images_preview}>
-                        {previewUrls && previewUrls?.map((previewUrl: string, index) =>
-                            <img
-                                className={styles.preview_image}
-                                src={previewUrl}
-                                alt={images.length ? images[index].name : 'image preview'}
-                            />
-                        )}
-                    </div>
-                </div>
-                <div className={styles.metadata}>
-                    <p>Upload the metadata</p>
-                    <Dropzone
-                        title={'Drag and drop json or selected in files'}
-                        accept={{
-                            'application/json': ['.json']
-                        }}
-                        multiple={true}
-                        onDrop={onDropMetadata}
-                    />
-                    <div className={styles.images_preview}>
-                        {metadatas && metadatas?.map((metadata: File, index) =>
-                            <div className={styles.json_preview}>
-                                <p>{metadata.name}</p>
-                                {/*<img*/}
-                                {/*    className={styles.preview_image}*/}
-                                {/*    src={jsonFormatIcon}*/}
-                                {/*    alt={metadatas.length ? metadatas[index].name : 'image preview'}*/}
-                                {/*/>*/}
-                            </div>
-                        )}
-                    </div>
-                </div>
-                <button
-                  className={styles.button}
-                  onClick={handleUploadFiles}
-                  type="button"
-                >
-                    Upload files
-                </button>
+            <p>Upload the images</p>
+            <Dropzone
+                title={'Drag and drop images or selected in files'}
+                accept={{
+                    'image/*': ['.jpeg', '.png'],
+                }}
+                multiple={true}
+                onDrop={onDropImages}
+                isLoading={isLoadingImages}
+            />
+            <div className={styles.images_preview}>
+                {previewUrls &&
+                    previewUrls?.map((previewUrl: string, index) => (
+                        <img
+                            className={styles.preview_image}
+                            src={previewUrl}
+                            alt={images.length ? images[index].name : 'image preview'}
+                        />
+                    ))}
             </div>
         </div>
-    );
-
+          <div className={styles.metadata}>
+              <p>Upload the metadata</p>
+              <Dropzone
+                  title={'Drag and drop json or selected in files'}
+                  accept={{
+                      'application/json': ['.json'],
+                  }}
+                  multiple={true}
+                  onDrop={onDropMetadata}
+                  isLoading={isLoadingMetadata}
+              />
+              <div className={styles.images_preview}>
+                  {metadatas &&
+                      metadatas?.map((metadata: File, index) => (
+                          <div className={styles.json_preview}>
+                              <p>{metadata.name}</p>
+                              {/*<img*/}
+                              {/*    className={styles.preview_image}*/}
+                              {/*    src={jsonFormatIcon}*/}
+                              {/*    alt={metadatas.length ? metadatas[index].name : 'image preview'}*/}
+                              {/*/>*/}
+                          </div>
+                      ))}
+              </div>
+          </div>
+          <button
+              className={styles.button}
+              onClick={handleUploadFiles}
+              type="button"
+          >
+              Upload files
+          </button>
+          </>}
+        </div>
+      </div>
+    )
 
     async function uploadFile(
-        file: File,
-        name: string,
-        description: string,
-        externalUrl: string,
-        metadataAttributes: any,
+      file: File,
+      name: string,
+      description: string,
+      externalUrl: string,
+      metadataAttributes: any
     ) {
-        const client = new NFTStorage({ token })
+      const client = new NFTStorage({ token })
 
-        // Preparing the file for upload
-        const nftStorageFile = new File([file], file.name, { type: file.type })
+      // Preparing the file for upload
+      const nftStorageFile = new File([file], file.name, { type: file.type })
 
-        const nft = {
-            image: nftStorageFile,
-            name,
-            description,
-            external_url: externalUrl,
-            attributes: metadataAttributes,
-        }
+      const nft = {
+        image: nftStorageFile,
+        name,
+        description,
+        external_url: externalUrl,
+        attributes: metadataAttributes,
+      }
 
-        // Ensure you await the store function
-        return await client.store(nft)
+      // Ensure you await the store function
+      return await client.store(nft)
     }
 }
