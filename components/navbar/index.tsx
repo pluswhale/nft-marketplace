@@ -272,7 +272,7 @@ const Navbar = () => {
                 Sign in
               </Button>
             ) : (
-              <Box css={{ maxWidth: '165px' }}>
+              <Box css={{ maxWidth: '185px' }}>
                 <ConnectWalletButton />
               </Box>
             )}
