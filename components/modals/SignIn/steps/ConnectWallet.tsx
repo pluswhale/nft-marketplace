@@ -10,7 +10,11 @@ type Props = {}
 const ConnectWallet = (props: Props) => {
   return (
     <div>
-      <Box css={{ maxWidth: '185px' }}>
+      <Box css={{ width: '100%' }}>
+        <p className={style.connect_wallet_placeholder}>
+          Now you should connect your crypto wallet
+        </p>
+
         <ConnectWalletButton />
       </Box>
     </div>

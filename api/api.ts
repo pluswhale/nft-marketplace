@@ -7,7 +7,7 @@ export const LOCAL_MEDIA_URL = 'http://localhost:8000'
 export const HOST_MEDIA_URL = 'https://metal.lcs.by'
 
 export const Instance = axios.create({
-  baseURL: localBackendUrl,
+  baseURL: hostBackendUrl,
   headers: {
     Accept: 'application/json',
     ['Content-Type']: 'application/json',
