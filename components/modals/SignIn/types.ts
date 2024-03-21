@@ -1,5 +1,5 @@
 export type Steps = {
   signIn: boolean
-  reg: boolean
+  signUp: boolean
   cw: boolean
 }

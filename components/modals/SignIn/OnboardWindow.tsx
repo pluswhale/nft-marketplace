@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import style from './onboard_window.module.scss'
 import { useAppDispatch } from '../../../redux/store'
 import SignIn from './steps/SignIn'
-import Registration from './steps/Registration'
+import SignUp from './steps/SignUp'
 import ConnectWallet from './steps/ConnectWallet'
 import { deleteLastModal } from '../../../redux/slices/modal'
 import { Steps } from './types'
@@ -12,7 +12,7 @@ const OnboardWindow = () => {
 
   const [steps, setSteps] = useState<Steps>({
     signIn: true,
-    reg: false,
+    signUp: false,
     cw: false,
   })
 
@@ -20,23 +20,21 @@ const OnboardWindow = () => {
     dispatch(deleteLastModal())
   }
 
-  const onGoSignUp = () => {
-    setSteps({ ...steps, reg: true, signIn: false })
-  }
+  const handleSetStep = (selectedStep: string) => {
+    const updatedSteps = Object.keys(steps).reduce((acc, key) => {
+      //@ts-ignore
+      acc[key] = key === selectedStep
+      return acc
+    }, {} as Steps)
 
-  const onGoSignIn = () => {
-    setSteps({ ...steps, reg: false, signIn: true })
-  }
-
-  const onGoConnectWallet = () => {
-    setSteps({ ...steps, reg: false, signIn: false, cw: true })
+    setSteps(updatedSteps)
   }
 
   const display = () => {
     if (steps.signIn) {
-      return <SignIn onGoConnectWallet={onGoConnectWallet} />
-    } else if (steps.reg) {
-      return <Registration onGoSignIn={onGoSignIn} />
+      return <SignIn onGoConnectWallet={handleSetStep} />
+    } else if (steps.signUp) {
+      return <SignUp onGoSignIn={handleSetStep} />
     } else {
       return <ConnectWallet />
     }
@@ -58,7 +56,10 @@ const OnboardWindow = () => {
         </div>
         {display()}
         {steps.signIn && (
-          <button className={style.modal_sign_up} onClick={onGoSignUp}>
+          <button
+            className={style.modal_sign_up}
+            onClick={() => handleSetStep('signUp')}
+          >
             <span className={style.modal_sign_up_placeholder}>
               If you have not an account please
             </span>{' '}

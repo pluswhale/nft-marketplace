@@ -8,7 +8,7 @@ import { ToastContext } from '../../../../context/ToastContextProvider'
 import { setAuthData } from '../../../../redux/slices/auth'
 
 type Props = {
-  onGoConnectWallet: () => void
+  onGoConnectWallet: (step: string) => void
 }
 
 const SignIn: FC<Props> = ({ onGoConnectWallet }) => {
@@ -35,7 +35,7 @@ const SignIn: FC<Props> = ({ onGoConnectWallet }) => {
 
     authAPI
       .signIn(data)
-      .then((res) => {
+      .then((res: any) => {
         if (res) {
           if (res.status === 200) {
             addToast?.({ title: 'You are login.', status: 'success' })
@@ -44,7 +44,7 @@ const SignIn: FC<Props> = ({ onGoConnectWallet }) => {
               localStorage.setItem('accessToken', res.data.token)
             }
             setTimeout(() => {
-              onGoConnectWallet()
+              onGoConnectWallet('cw')
             }, 1000)
           } else if (res.status === 400) {
             addToast?.({
@@ -53,7 +53,10 @@ const SignIn: FC<Props> = ({ onGoConnectWallet }) => {
             })
           }
         } else {
-          addToast?.({ title: 'Something went wrong', status: 'error' })
+          addToast?.({
+            title: res?.data?.message || 'Something went wrong',
+            status: 'error',
+          })
         }
       })
       .catch((err) => {

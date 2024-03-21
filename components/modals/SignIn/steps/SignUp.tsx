@@ -5,10 +5,10 @@ import { authAPI } from '../../../../api/auth'
 import { ToastContext } from '../../../../context/ToastContextProvider'
 
 type Props = {
-  onGoSignIn: () => void
+  onGoSignIn: (step: string) => void
 }
 
-const Registration: FC<Props> = ({ onGoSignIn }): ReactElement => {
+const SignUp: FC<Props> = ({ onGoSignIn }): ReactElement => {
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [successMsg, setSuccessMsg] = useState<string>('')
@@ -37,7 +37,7 @@ const Registration: FC<Props> = ({ onGoSignIn }): ReactElement => {
           })
 
           setTimeout(() => {
-            onGoSignIn()
+            onGoSignIn('signIn')
           }, 1000)
         } else if (res.status === 400) {
           addToast?.({
@@ -89,4 +89,4 @@ const Registration: FC<Props> = ({ onGoSignIn }): ReactElement => {
   )
 }
 
-export default Registration
+export default SignUp
