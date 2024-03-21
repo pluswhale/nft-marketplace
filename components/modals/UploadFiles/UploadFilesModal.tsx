@@ -1,10 +1,11 @@
 import Dropzone from '../../common/DropZone/DropZone'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 const token =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDZCMzA3RjYzMEZFQjIzMTRjNjZiMzc3NEZlYzg1MkU5ODYxOTBkM0EiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTcxMDQwOTg4MzI3MywibmFtZSI6Im5mdC1tYXJrZXRwbGFjZSJ9.gRw8xMKCCO8mOfHKyWaWFbq2i6MW6S6E-e8ODuSQbRc'
 
 import styles from './upload_files_modal.module.scss'
 import { File, NFTStorage } from 'nft.storage'
+import { Instance } from '../../../api/api'
 
 type Props = {
   onClose: () => void
@@ -160,6 +161,12 @@ export function UploadFilesModal({ onClose }: Props) {
     if (isLoadingToIPFS) return
     onClose()
   }
+
+  useEffect(() => {
+    Instance.get('users/').then((res) => {
+      console.log('res', res)
+    })
+  }, [])
 
   return (
     <div className={styles.container} role={'dialog'}>

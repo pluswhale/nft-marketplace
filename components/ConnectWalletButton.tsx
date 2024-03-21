@@ -2,10 +2,14 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import Box from 'components/primitives/Box'
 import Button from 'components/primitives/Button'
 import { FC } from 'react'
+import { useAppDispatch } from '../redux/store'
+import { deleteLastModal } from '../redux/slices/modal'
 
 type Props = {}
 
 export const ConnectWalletButton: FC<Props> = () => {
+  const dispatch = useAppDispatch()
+
   return (
     <ConnectButton.Custom>
       {({ account, chain, openConnectModal, mounted }) => {
@@ -23,7 +27,10 @@ export const ConnectWalletButton: FC<Props> = () => {
                   <Button
                     css={{ flex: 1, justifyContent: 'center' }}
                     corners="rounded"
-                    onClick={openConnectModal}
+                    onClick={() => {
+                      dispatch(deleteLastModal())
+                      openConnectModal()
+                    }}
                     type="button"
                   >
                     Connect Wallet

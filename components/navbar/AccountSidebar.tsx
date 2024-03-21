@@ -30,11 +30,9 @@ import { useSelector } from 'react-redux'
 import { isAuthSelector } from '../../redux/selectors/authSelectors'
 
 export const AccountSidebar: FC = () => {
-  const dispatch = useAppDispatch()
   const { address } = useAccount()
   const { disconnect } = useDisconnect()
   const router = useRouter()
-  const isAuth = useSelector(isAuthSelector)
   const {
     avatar: ensAvatar,
     shortAddress,
@@ -62,11 +60,6 @@ export const AccountSidebar: FC = () => {
       )}
     </Button>
   )
-
-  const onOpenSignInModal = () => {
-    dispatch(pushModal({ modal: modals.signIn }))
-    setOpen(false)
-  }
 
   return (
     <DialogPrimitive.Root onOpenChange={setOpen} open={open}>
@@ -270,16 +263,6 @@ export const AccountSidebar: FC = () => {
                   >
                     Disconnect Wallet
                   </Button>
-                  {!isAuth && (
-                    <Button
-                      size="large"
-                      css={{ my: '$4', justifyContent: 'center' }}
-                      color="primary"
-                      onClick={onOpenSignInModal}
-                    >
-                      Join Our Platform
-                    </Button>
-                  )}
                 </Flex>
               </motion.div>
             </Content>

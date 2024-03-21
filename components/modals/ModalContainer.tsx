@@ -2,7 +2,7 @@ import { shallowEqual, useSelector } from 'react-redux'
 import { activeModalSelector } from '../../redux/selectors/modalSelectors'
 import { deleteLastModal } from '../../redux/slices/modal'
 import { PopupWithOverlay } from '../portals/PopupWithOverlay/PopupWithOverlay'
-import SignIn from './SignIn/SignIn'
+import SignIn from './SignIn/OnboardWindow'
 import { useAppDispatch } from '../../redux/store'
 
 const modalList = [{ id: 1, name: 'sign-in', element: <SignIn /> }]

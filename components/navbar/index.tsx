@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Box, Flex, Card } from '../primitives'
+import { Box, Flex, Card, Button } from '../primitives'
 import GlobalSearch from './GlobalSearch'
 import { useRouter } from 'next/router'
 import { useHotkeys } from 'react-hotkeys-hook'
@@ -18,12 +18,19 @@ import CartButton from './CartButton'
 import { AccountSidebar } from 'components/navbar/AccountSidebar'
 
 import * as HoverCard from '@radix-ui/react-hover-card'
+import { pushModal } from '../../redux/slices/modal'
+import { modals } from '../modals/constants'
+import { useAppDispatch } from '../../redux/store'
+import { useSelector } from 'react-redux'
+import { isAuthSelector } from '../../redux/selectors/authSelectors'
 
 export const NAVBAR_HEIGHT = 81
 export const NAVBAR_HEIGHT_MOBILE = 77
 
 const Navbar = () => {
   const { theme } = useTheme()
+  const dispatch = useAppDispatch()
+  const isAuth = useSelector(isAuthSelector)
   const { isConnected } = useAccount()
   const isMobile = useMediaQuery({ query: '(max-width: 960px' })
   const isMounted = useMounted()
@@ -42,6 +49,10 @@ const Navbar = () => {
 
   if (!isMounted) {
     return null
+  }
+
+  const onOpenSignInModal = () => {
+    dispatch(pushModal({ modal: modals.signIn }))
   }
 
   return isMobile ? (
@@ -239,9 +250,14 @@ const Navbar = () => {
         {isConnected ? (
           <AccountSidebar />
         ) : (
-          <Box css={{ maxWidth: '185px' }}>
-            <ConnectWalletButton />
-          </Box>
+          <Button
+            size="large"
+            css={{ my: '$4', justifyContent: 'center' }}
+            color="primary"
+            onClick={onOpenSignInModal}
+          >
+            Sign in
+          </Button>
         )}
         <CartButton />
       </Flex>

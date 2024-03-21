@@ -109,7 +109,6 @@ function AppWrapper(props: AppProps & { baseUrl: string }) {
                 <ErrorTrackingProvider>
                   <ReferralContextProvider>
                     <MyApp {...props} />
-                    <ModalContainer />
                   </ReferralContextProvider>
                 </ErrorTrackingProvider>
               </AnalyticsProvider>
@@ -225,6 +224,7 @@ function MyApp({
                 <RainbowKitProvider theme={rainbowKitTheme} modalSize="compact">
                   <ToastContextProvider>
                     <FunctionalComponent {...pageProps} />
+                    <ModalContainer />
                   </ToastContextProvider>
                 </RainbowKitProvider>
               </Tooltip.Provider>
