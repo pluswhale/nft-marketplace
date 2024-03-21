@@ -1,46 +1,33 @@
-// import {shallowEqual, useSelector} from 'react-redux';
-// import {useAppDispatch} from "redux/store";
-// import {activeModalSelector} from "../../redux/selectors/modalSelectors";
-// import CreateNft from "./CreateNFT";
-// import {deleteLastModal, deleteModal} from "../../redux/slices/modal";
-// import {PopupWithOverlay} from "../portals/PopupWithOverlay/PopupWithOverlay";
-// import {ReactElement} from "react";
-//
-//
-// const modalList = [
-//     { id: 1, name: 'create-nft', element: <CreateNft /> },
-// ];
-//
-// const ModalContainer = () => {
-//     const dispatch = useAppDispatch();
-//
-//     const activeModals = useSelector(activeModalSelector, shallowEqual);
-//
-//     const handleCloseModal = () => {
-//         dispatch(deleteLastModal());
-//     };
-//
-//     const displayingModals = () => {
-//
-//              const activeModalComponents = activeModals.map((activeModal) => {
-//                  return modalList
-//                      .map((modal) => activeModal.id === modal.id ? modal.element:null )
-//                      .filter((modal) => modal)
-//              });
-//
-//             return (
-//                 <PopupWithOverlay onClose={handleCloseModal} isOpened={Boolean(modal.id)}>
-//                     {activeModalComponents}
-//                 </PopupWithOverlay>
-//             );
-//
-//
-//     }
-//
-//     return (
-//         <>
-//             {displayingModals()}
-//         </>
-//     );
-// };
-// export default ModalContainer;
+import { shallowEqual, useSelector } from 'react-redux'
+import { activeModalSelector } from '../../redux/selectors/modalSelectors'
+import { deleteLastModal } from '../../redux/slices/modal'
+import { PopupWithOverlay } from '../portals/PopupWithOverlay/PopupWithOverlay'
+import SignIn from './SignIn/SignIn'
+import { useAppDispatch } from '../../redux/store'
+
+const modalList = [{ id: 1, name: 'sign-in', element: <SignIn /> }]
+
+const ModalContainer = () => {
+  const dispatch = useAppDispatch()
+
+  const activeModals = useSelector(activeModalSelector, shallowEqual)
+
+  const handleCloseModal = () => {
+    dispatch(deleteLastModal())
+  }
+
+  const displayingModals = () => {
+    return (
+      <PopupWithOverlay
+        onClose={handleCloseModal}
+        isOpened={Boolean(activeModals[0]?.id)}
+      >
+        {modalList.find((modal) => modal.id === activeModals?.[0]?.id)
+          ?.element || <></>}
+      </PopupWithOverlay>
+    )
+  }
+
+  return <>{displayingModals()}</>
+}
+export default ModalContainer

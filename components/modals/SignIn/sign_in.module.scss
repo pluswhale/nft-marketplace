@@ -1,0 +1,151 @@
+
+.modal_bg {
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+  width: 424px;
+  border-radius: 30px;
+  background: #FFF;
+  z-index: 999;
+}
+
+.success_message {
+  padding: 30px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.modal_bg.active {
+  display: flex;
+}
+
+.modal_block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 424px;
+}
+
+.close_ico {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  padding-top: 18px;
+  padding-right: 18px;
+}
+
+.close_modal {
+  cursor: pointer;
+}
+
+.modal_title {
+  color: black;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  margin-bottom: 25px;
+}
+
+.login_methods {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 17px 24px 17px 24px;
+  width: 336px;
+  height: 54px;
+  border-radius: 100px;
+  background: #C9E5FC;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.login_text {
+  color: black;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 300;
+  line-height: 120%;
+}
+
+.block_or {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 15px;
+  margin-bottom: 20px;
+  p {
+    color: black;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 120%;
+  }
+}
+
+.decor_line {
+  width: 97px;
+  height: 1px;
+  stroke-width: 1px;
+  background: gray;
+}
+
+.block_input_data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 20px;
+}
+
+.entrance_input-wrapper {
+  width: 336px;
+  height: 54px;
+}
+
+.entrance_btn_wrapper {
+  width: 336px;
+  height: 54px;
+  margin: 20px 0;
+}
+
+.button_login_to {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 0px 17px 0px;
+  width: 80%;
+  margin-bottom: 20px;
+  button {
+    color: gray;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 120%;
+    background: transparent;
+    border: none;
+  }
+}
+
+.registration_button {
+  color: darkgray;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 120%;
+  text-decoration-line: underline;
+  background: transparent;
+  border: none;
+}
+
+.input {
+  width: 80%;
+  outline: none;
+  border: 2px solid #5B5BD6;
+  padding: 10px 15px;
+  border-radius: 4px;
+
+}
+

@@ -23,11 +23,18 @@ import CopyText from 'components/common/CopyText'
 import Link from 'next/link'
 import Wallet from './Wallet'
 import { useRouter } from 'next/router'
+import { pushModal } from '../../redux/slices/modal'
+import { useAppDispatch } from '../../redux/store'
+import { modals } from '../modals/constants'
+import { useSelector } from 'react-redux'
+import { isAuthSelector } from '../../redux/selectors/authSelectors'
 
 export const AccountSidebar: FC = () => {
+  const dispatch = useAppDispatch()
   const { address } = useAccount()
   const { disconnect } = useDisconnect()
   const router = useRouter()
+  const isAuth = useSelector(isAuthSelector)
   const {
     avatar: ensAvatar,
     shortAddress,
@@ -55,6 +62,11 @@ export const AccountSidebar: FC = () => {
       )}
     </Button>
   )
+
+  const onOpenSignInModal = () => {
+    dispatch(pushModal({ modal: modals.signIn }))
+    setOpen(false)
+  }
 
   return (
     <DialogPrimitive.Root onOpenChange={setOpen} open={open}>
@@ -169,7 +181,10 @@ export const AccountSidebar: FC = () => {
                     </CopyText>
                   </Flex>
                   <Grid css={{ gridTemplateColumns: '1fr 1fr', mt: 32 }}>
-                    <Link href={`/portfolio/${address || ''}?tab=items`} replace={true}>
+                    <Link
+                      href={`/portfolio/${address || ''}?tab=items`}
+                      replace={true}
+                    >
                       <Flex
                         align="center"
                         css={{
@@ -183,7 +198,10 @@ export const AccountSidebar: FC = () => {
                         <Text style="body1">My Items</Text>
                       </Flex>
                     </Link>
-                    <Link href={`/portfolio/${address || ''}?tab=listings`} replace={true}>
+                    <Link
+                      href={`/portfolio/${address || ''}?tab=listings`}
+                      replace={true}
+                    >
                       <Flex
                         align="center"
                         css={{
@@ -197,7 +215,10 @@ export const AccountSidebar: FC = () => {
                         <Text style="body1">Listings</Text>
                       </Flex>
                     </Link>
-                    <Link href={`/portfolio/${address || ''}?tab=offers`} replace={true}>
+                    <Link
+                      href={`/portfolio/${address || ''}?tab=offers`}
+                      replace={true}
+                    >
                       <Flex
                         align="center"
                         css={{
@@ -211,7 +232,10 @@ export const AccountSidebar: FC = () => {
                         <Text style="body1">Offers Made</Text>
                       </Flex>
                     </Link>
-                    <Link href={`/portfolio/${address || ''}?tab=activity`} replace={true}>
+                    <Link
+                      href={`/portfolio/${address || ''}?tab=activity`}
+                      replace={true}
+                    >
                       <Flex
                         align="center"
                         css={{
@@ -246,6 +270,16 @@ export const AccountSidebar: FC = () => {
                   >
                     Disconnect Wallet
                   </Button>
+                  {!isAuth && (
+                    <Button
+                      size="large"
+                      css={{ my: '$4', justifyContent: 'center' }}
+                      color="primary"
+                      onClick={onOpenSignInModal}
+                    >
+                      Join Our Platform
+                    </Button>
+                  )}
                 </Flex>
               </motion.div>
             </Content>

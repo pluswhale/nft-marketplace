@@ -1,4 +1,4 @@
-import React, { FC, ReactElement, useCallback } from 'react'
+import React, { FC, ReactElement } from 'react'
 import { useDropzone } from 'react-dropzone'
 
 import styles from './dropzone.module.scss'
@@ -26,8 +26,12 @@ const Dropzone: FC<Props> = ({
 
   return (
     <div className={styles.dropzone} {...getRootProps()}>
-      {0 ? (
-        <img className={styles.loader} src={`${process.env.NEXT_PUBLIC_HOST_URL}/loaders/loader_round.svg`} alt="loader" />
+      {isLoading ? (
+        <img
+          className={styles.loader}
+          src={`${process.env.NEXT_PUBLIC_HOST_URL}/loaders/loader_round.svg`}
+          alt="loader"
+        />
       ) : (
         <>
           <input className={styles.dropzone__input} {...getInputProps()} />

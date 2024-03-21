@@ -40,8 +40,9 @@ import { WagmiProvider, http } from 'wagmi'
 import { chainIdToAlchemyNetworkMap } from 'utils/chainIdToAlchemyNetworkMap'
 import { _transports } from '@rainbow-me/rainbowkit/dist/config/getDefaultConfig'
 import { Chain, mainnet } from 'viem/chains'
-import {Provider} from "react-redux";
-import store from "../redux/store";
+import { Provider } from 'react-redux'
+import store from '../redux/store'
+import ModalContainer from '../components/modals/ModalContainer'
 
 //CONFIGURABLE: Use nextjs to load your own custom font: https://nextjs.org/docs/basic-features/font-optimization
 const inter = Inter({
@@ -55,8 +56,7 @@ export const NORMALIZE_ROYALTIES = process.env.NEXT_PUBLIC_NORMALIZE_ROYALTIES
 const WALLET_CONNECT_PROJECT_ID =
   process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || ''
 
-const DISABLE_PROXY =
-  process.env.NEXT_PUBLIC_DISABLE_PROXY === 'true'
+const DISABLE_PROXY = process.env.NEXT_PUBLIC_DISABLE_PROXY === 'true'
 
 const ALCHEMY_API_KEY = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY
 
@@ -65,14 +65,14 @@ const wagmiConfig = getDefaultConfig({
   projectId: WALLET_CONNECT_PROJECT_ID,
   chains: (supportedChains.length === 0 ? [mainnet] : supportedChains) as [
     Chain,
-    ...Chain[],
+    ...Chain[]
   ],
   ssr: true,
   transports: supportedChains.reduce((transportsConfig: _transports, chain) => {
     const network = chainIdToAlchemyNetworkMap[chain.id]
     if (network && ALCHEMY_API_KEY) {
       transportsConfig[chain.id] = http(
-        `https://${network}.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
+        `https://${network}.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
       )
     } else {
       transportsConfig[chain.id] = http() // Fallback to default HTTP transport
@@ -102,21 +102,20 @@ function AppWrapper(props: AppProps & { baseUrl: string }) {
       }}
     >
       <Provider store={store}>
-
-
-      <WagmiProvider config={wagmiConfig}>
-        <QueryClientProvider client={queryClient}>
-          <ChainContextProvider>
-            <AnalyticsProvider>
-              <ErrorTrackingProvider>
-                <ReferralContextProvider>
-                  <MyApp {...props} />
-                </ReferralContextProvider>
-              </ErrorTrackingProvider>
-            </AnalyticsProvider>
-          </ChainContextProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
+        <WagmiProvider config={wagmiConfig}>
+          <QueryClientProvider client={queryClient}>
+            <ChainContextProvider>
+              <AnalyticsProvider>
+                <ErrorTrackingProvider>
+                  <ReferralContextProvider>
+                    <MyApp {...props} />
+                    <ModalContainer />
+                  </ReferralContextProvider>
+                </ErrorTrackingProvider>
+              </AnalyticsProvider>
+            </ChainContextProvider>
+          </QueryClientProvider>
+        </WagmiProvider>
       </Provider>
     </ThemeProvider>
   )
@@ -147,14 +146,14 @@ function MyApp({
       setRainbowKitTheme(
         rainbowDarkTheme({
           borderRadius: 'small',
-        }),
+        })
       )
     } else {
       setReservoirKitTheme(reservoirLightTheme(reservoirKitThemeOverrides))
       setRainbowKitTheme(
         rainbowLightTheme({
           borderRadius: 'small',
-        }),
+        })
       )
     }
   }, [theme])
@@ -209,7 +208,7 @@ function MyApp({
                   checkPollingInterval: checkPollingInterval,
                   paymentTokens: chainPaymentTokensMap[id],
                 }
-              },
+              }
             ),
             logLevel: 4,
             source: source,
@@ -225,7 +224,7 @@ function MyApp({
               <Tooltip.Provider>
                 <RainbowKitProvider theme={rainbowKitTheme} modalSize="compact">
                   <ToastContextProvider>
-                          <FunctionalComponent {...pageProps} />
+                    <FunctionalComponent {...pageProps} />
                   </ToastContextProvider>
                 </RainbowKitProvider>
               </Tooltip.Provider>

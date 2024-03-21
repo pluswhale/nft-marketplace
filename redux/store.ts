@@ -1,22 +1,24 @@
-import { combineReducers } from 'redux';
-import { useDispatch } from 'react-redux';
-import {AnyAction, configureStore, createAction, ThunkDispatch} from '@reduxjs/toolkit';
+import { combineReducers } from 'redux'
+import { useDispatch } from 'react-redux'
+import { AnyAction, configureStore, ThunkDispatch } from '@reduxjs/toolkit'
 
-import modal from "./slices/modal";
+import modal from './slices/modal'
+import auth from './slices/auth'
 
 const rootReducer = combineReducers({
-    modal
-});
+  modal,
+  auth,
+})
 
 const store = configureStore({
-    reducer: rootReducer,
-});
+  reducer: rootReducer,
+})
 
-export type RootStateType = ReturnType<typeof store.getState>;
-export type AppThunkType = ThunkDispatch<RootStateType, void, AnyAction>;
-export const useAppDispatch = () => useDispatch<AppThunkType>();
+export type RootStateType = ReturnType<typeof store.getState>
+export type AppThunkType = ThunkDispatch<RootStateType, void, AnyAction>
+export const useAppDispatch = () => useDispatch<AppThunkType>()
 
-export type AppDispatch = typeof store.dispatch;
-export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch
+export type RootState = ReturnType<typeof store.getState>
 
-export default store;
+export default store
