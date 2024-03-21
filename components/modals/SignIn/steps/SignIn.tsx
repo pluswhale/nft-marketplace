@@ -38,6 +38,9 @@ const SignIn: FC<Props> = ({ onGoConnectWallet }) => {
         if (res) {
           if (res.status === 200) {
             addToast?.({ title: 'You are login.', status: 'success' })
+            if (res.data.token) {
+              localStorage.setItem('accessToken', res.data.token)
+            }
             setTimeout(() => {
               onGoConnectWallet()
             }, 1000)
@@ -52,7 +55,11 @@ const SignIn: FC<Props> = ({ onGoConnectWallet }) => {
         }
       })
       .catch((err) => {
-        addToast?.({ title: 'Something went wrong', status: 'error' })
+        console.log('err', err)
+        addToast?.({
+          title: err.response.data.message || 'Something went wrong',
+          status: 'error',
+        })
       })
   }
 
