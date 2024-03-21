@@ -18,8 +18,11 @@ const modalSlice = createSlice({
       state.authData = action.payload.data
       state.isAuth = true
     },
+    setIsAuth: (state, action: PayloadAction<{ isAuth: boolean }>) => {
+      state.isAuth = action.payload.isAuth
+    },
   },
 })
 
-export const { setAuthData } = modalSlice.actions
+export const { setAuthData, setIsAuth } = modalSlice.actions
 export default modalSlice.reducer

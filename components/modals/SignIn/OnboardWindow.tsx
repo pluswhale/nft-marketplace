@@ -43,7 +43,10 @@ const OnboardWindow = () => {
   }
 
   return (
-    <div className={style.modal_bg}>
+    <div
+      style={steps.cw ? { height: 'unset', paddingBottom: '20px' } : {}}
+      className={style.modal_bg}
+    >
       <div className={style.modal_block}>
         <div className={style.close_ico} onClick={handleCloseModal}>
           <img

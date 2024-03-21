@@ -5,6 +5,7 @@ import { Button } from '../../../primitives'
 import { authAPI } from '../../../../api/auth'
 import style from './steps.module.scss'
 import { ToastContext } from '../../../../context/ToastContextProvider'
+import { setAuthData } from '../../../../redux/slices/auth'
 
 type Props = {
   onGoConnectWallet: () => void
@@ -39,6 +40,7 @@ const SignIn: FC<Props> = ({ onGoConnectWallet }) => {
           if (res.status === 200) {
             addToast?.({ title: 'You are login.', status: 'success' })
             if (res.data.token) {
+              dispatch(setAuthData({ data: res.data?.user }))
               localStorage.setItem('accessToken', res.data.token)
             }
             setTimeout(() => {

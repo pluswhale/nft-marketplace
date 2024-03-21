@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { Box, Flex, Card, Button } from '../primitives'
 import GlobalSearch from './GlobalSearch'
 import { useRouter } from 'next/router'
@@ -23,6 +23,9 @@ import { modals } from '../modals/constants'
 import { useAppDispatch } from '../../redux/store'
 import { useSelector } from 'react-redux'
 import { isAuthSelector } from '../../redux/selectors/authSelectors'
+import style from '../modals/SignIn/steps/steps.module.scss'
+import * as React from 'react'
+import { setIsAuth } from '../../redux/slices/auth'
 
 export const NAVBAR_HEIGHT = 81
 export const NAVBAR_HEIGHT_MOBILE = 77
@@ -46,6 +49,14 @@ const Navbar = () => {
       searchRef?.current?.focus()
     }
   })
+
+  useEffect(() => {
+    const JWT_TOKEN =
+      typeof window !== 'undefined' && window.localStorage
+        ? localStorage.getItem('accessToken')
+        : null
+    dispatch(setIsAuth({ isAuth: !!JWT_TOKEN }))
+  }, [])
 
   if (!isMounted) {
     return null
@@ -250,14 +261,22 @@ const Navbar = () => {
         {isConnected ? (
           <AccountSidebar />
         ) : (
-          <Button
-            size="large"
-            css={{ my: '$4', justifyContent: 'center' }}
-            color="primary"
-            onClick={onOpenSignInModal}
-          >
-            Sign in
-          </Button>
+          <>
+            {!isAuth ? (
+              <Button
+                size="large"
+                css={{ my: '$4', justifyContent: 'center' }}
+                color="primary"
+                onClick={onOpenSignInModal}
+              >
+                Sign in
+              </Button>
+            ) : (
+              <Box css={{ maxWidth: '165px' }}>
+                <ConnectWalletButton />
+              </Box>
+            )}
+          </>
         )}
         <CartButton />
       </Flex>
