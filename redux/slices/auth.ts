@@ -3,11 +3,6 @@ import { InitialStateType } from './types'
 
 const initialState = {
   authData: {},
-  accounts: [
-    { email: 'saranyaprasertsang@yahoo.com', password: 'Hodbos929%' },
-    { email: 'ferrucio_@hotmail.com', password: 'Phpwp902J99$' },
-    { email: 'anyakaewthamai@gmail.com', password: 'sojsIos92L' },
-  ],
 } as InitialStateType
 
 const modalSlice = createSlice({

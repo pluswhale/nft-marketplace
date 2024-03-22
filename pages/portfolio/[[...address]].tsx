@@ -1,5 +1,5 @@
 import { NextPage } from 'next'
-import { Text, Flex, Box } from '../../components/primitives'
+import { Text, Flex, Box, Button } from '../../components/primitives'
 import Layout from 'components/Layout'
 import { useMediaQuery } from 'react-responsive'
 import { useContext, useEffect, useMemo, useRef, useState } from 'react'
@@ -41,6 +41,12 @@ import Jazzicon, { jsNumberForAddress } from 'react-jazzicon'
 import { Avatar } from 'components/primitives/Avatar'
 import CopyText from 'components/common/CopyText'
 import CreateNft from '../../components/modals/CreateNFT'
+import { CiLogout } from 'react-icons/ci'
+import { setIsAuth } from '../../redux/slices/auth'
+import { useAppDispatch } from '../../redux/store'
+import { shallowEqual, useSelector } from 'react-redux'
+import { isAuthSelector } from '../../redux/selectors/authSelectors'
+import { shallow } from 'zustand/shallow'
 
 type ActivityTypes = Exclude<
   NonNullable<
@@ -54,6 +60,7 @@ type ActivityTypes = Exclude<
 export type UserToken = ReturnType<typeof useUserTokens>['data'][0]
 
 const IndexPage: NextPage = () => {
+  const dispatch = useAppDispatch()
   const router = useRouter()
   const { address: accountAddress, isConnected } = useAccount()
   const address = router.query.address
@@ -76,6 +83,7 @@ const IndexPage: NextPage = () => {
   const { addToast } = useContext(ToastContext)
   const isOwner =
     !router.query.address || router.query.address[0] === accountAddress
+  const isAuth = useSelector(isAuthSelector, shallowEqual)
 
   const {
     avatar: ensAvatar,
@@ -171,6 +179,11 @@ const IndexPage: NextPage = () => {
       router.push(router, undefined, { shallow: true })
     }
   }, [tabValue, router])
+
+  const onLogout = () => {
+    localStorage.removeItem('accessToken')
+    dispatch(setIsAuth({ isAuth: false }))
+  }
 
   if (!isMounted) {
     return null
@@ -430,31 +443,78 @@ const IndexPage: NextPage = () => {
               )}
             </>
           ) : (
-            <Tabs.Root
-              defaultValue="create"
-              value={tabValue}
-              onValueChange={(value) => setTabValue(value)}
-            >
-              <Flex
-                css={{
-                  overflowX: 'scroll',
-                  '@sm': { overflowX: 'auto' },
-                }}
-              >
-                <TabsList
-                  style={{
-                    whiteSpace: 'nowrap',
+            <>
+              {isAuth && (
+                <Box
+                  css={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flex: 1,
+                    gap: '$4',
+                    pb: '$5',
                     width: '100%',
                   }}
                 >
-                  <TabsTrigger value="create">Create NFT</TabsTrigger>
-                </TabsList>
-              </Flex>
+                  <Box
+                    css={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      flex: 1,
+                      gap: '$4',
+                      width: '100%',
+                    }}
+                  >
+                    <Box
+                      css={{
+                        display: 'flex',
+                        flex: 1,
+                        gap: '$4',
+                        width: '100%',
+                      }}
+                    >
+                      John Doe
+                    </Box>
+                    <Button
+                      css={{
+                        display: 'flex',
+                        gap: '$4',
+                      }}
+                      color={'secondary'}
+                      onClick={onLogout}
+                    >
+                      Log Out <CiLogout />
+                    </Button>
+                  </Box>
 
-              <TabsContent value="create">
-                <CreateNft />
-              </TabsContent>
-            </Tabs.Root>
+                  <Tabs.Root
+                    defaultValue="create"
+                    value={tabValue}
+                    onValueChange={(value) => setTabValue(value)}
+                  >
+                    <Flex
+                      css={{
+                        overflowX: 'scroll',
+                        '@sm': { overflowX: 'auto' },
+                      }}
+                    >
+                      <TabsList
+                        style={{
+                          whiteSpace: 'nowrap',
+                          width: '100%',
+                        }}
+                      >
+                        <TabsTrigger value="create">Create NFT</TabsTrigger>
+                      </TabsList>
+                    </Flex>
+
+                    <TabsContent value="create">
+                      <CreateNft />
+                    </TabsContent>
+                  </Tabs.Root>
+                </Box>
+              )}
+            </>
+
             // <Flex
             //   direction="column"
             //   align="center"
