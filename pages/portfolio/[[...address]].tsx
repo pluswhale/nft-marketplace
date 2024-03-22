@@ -447,7 +447,7 @@ const IndexPage: NextPage = () => {
                     width: '100%',
                   }}
                 >
-                  <TabsTrigger value="create">Upload arts</TabsTrigger>
+                  <TabsTrigger value="create">Create NFT</TabsTrigger>
                 </TabsList>
               </Flex>
 
