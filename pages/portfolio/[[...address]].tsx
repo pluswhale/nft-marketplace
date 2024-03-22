@@ -40,7 +40,7 @@ import { ToastContext } from 'context/ToastContextProvider'
 import Jazzicon, { jsNumberForAddress } from 'react-jazzicon'
 import { Avatar } from 'components/primitives/Avatar'
 import CopyText from 'components/common/CopyText'
-import CreateNft from "../../components/modals/CreateNFT";
+import CreateNft from '../../components/modals/CreateNFT'
 
 type ActivityTypes = Exclude<
   NonNullable<
@@ -162,7 +162,7 @@ const IndexPage: NextPage = () => {
           break
       }
     }
-    setTabValue(tab);
+    setTabValue(tab)
   }, [isSmallDevice, router.asPath])
 
   useEffect(() => {
@@ -423,33 +423,58 @@ const IndexPage: NextPage = () => {
                       </Flex>
                     </TabsContent>
                     <TabsContent value="create">
-                      <CreateNft/>
+                      <CreateNft />
                     </TabsContent>
                   </Tabs.Root>
                 </>
               )}
             </>
           ) : (
-            <Flex
-              direction="column"
-              align="center"
-              css={{ mx: 'auto', py: '120px', maxWidth: '350px', gap: '$4' }}
+            <Tabs.Root
+              defaultValue="create"
+              value={tabValue}
+              onValueChange={(value) => setTabValue(value)}
             >
-              <Text style="h4" css={{ mb: '$3' }}>
-                Sell your NFT instantly
-              </Text>
-              <Text css={{ color: '$gray11' }}>
-                <FontAwesomeIcon icon={faWallet} size="2xl" />
-              </Text>
-              <Text
-                style="body1"
-                css={{ color: '$gray11', textAlign: 'center', mb: '$4' }}
+              <Flex
+                css={{
+                  overflowX: 'scroll',
+                  '@sm': { overflowX: 'auto' },
+                }}
               >
-                Connect wallet to instant sell your token across all major
-                marketplaces.
-              </Text>
-              <ConnectWalletButton />
-            </Flex>
+                <TabsList
+                  style={{
+                    whiteSpace: 'nowrap',
+                    width: '100%',
+                  }}
+                >
+                  <TabsTrigger value="create">Upload arts</TabsTrigger>
+                </TabsList>
+              </Flex>
+
+              <TabsContent value="create">
+                <CreateNft />
+              </TabsContent>
+            </Tabs.Root>
+            // <Flex
+            //   direction="column"
+            //   align="center"
+            //   css={{ mx: 'auto', py: '120px', maxWidth: '350px', gap: '$4' }}
+            // >
+            //   <Text style="h4" css={{ mb: '$3' }}>
+            //     Sell your NFT instantly
+            //   </Text>
+            //   <Text css={{ color: '$gray11' }}>
+            //     <FontAwesomeIcon icon={faWallet} size="2xl" />
+            //   </Text>
+            //   <Text
+            //     style="body1"
+            //     css={{ color: '$gray11', textAlign: 'center', mb: '$4' }}
+            //   >
+            //     Connect wallet to instant sell your token across all major
+            //     marketplaces.
+            //   </Text>
+            //   <ConnectWalletButton />
+            // </Flex>
           )}
         </Flex>
         <AcceptBidModal

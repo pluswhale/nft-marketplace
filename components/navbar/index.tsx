@@ -249,7 +249,7 @@ const Navbar = () => {
               </HoverCard.Content>
             </HoverCard.Root>
           </Box>
-          {isConnected && (
+          {isAuth && (
             <Link href={`/portfolio/${address || ''}?chain=${routePrefix}`}>
               <Box css={{ mr: '$2' }}>
                 <NavItem>Portfolio</NavItem>
