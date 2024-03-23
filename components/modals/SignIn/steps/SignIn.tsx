@@ -68,6 +68,10 @@ const SignIn: FC<Props> = ({ onGoConnectWallet }) => {
       })
   }
 
+  const handleLoginThroughGoogle = () => {
+    window.location.href = 'http://localhost:3001/auth/google'
+  }
+
   return (
     <>
       {successMsg ? (
@@ -76,10 +80,16 @@ const SignIn: FC<Props> = ({ onGoConnectWallet }) => {
         <>
           <p className={style.modal_title}>Sign in</p>
 
-          {/*<div className={style.loginMethods}>*/}
-          {/*    <img src={ico1} alt="Google" />*/}
-          {/*    <p className={style.loginText}>Вход через Google</p>*/}
-          {/*</div>*/}
+          <div
+            onClick={handleLoginThroughGoogle}
+            className={style.loginMethods}
+          >
+            <img
+              src={`${process.env.NEXT_PUBLIC_HOST_URL}/icons/google-icon.png`}
+              alt="Google"
+            />
+            <p className={style.loginText}>Вход через Google</p>
+          </div>
 
           {/*<div className={style.loginMethods}>*/}
           {/*    <img src={ico2} alt="Facebook" />*/}
