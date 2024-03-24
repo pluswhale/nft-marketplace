@@ -159,7 +159,7 @@ export function UploadFilesModal({ onClose }: Props) {
       setMetadatas(jsonFiles)
     }
 
-    fetchImagesAndMetadata()
+    // fetchImagesAndMetadata()
   }, [])
 
   const onDropImages = useCallback(
