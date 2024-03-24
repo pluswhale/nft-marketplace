@@ -66,7 +66,7 @@ const IndexPage: NextPage = () => {
   const address = router.query.address
     ? (router.query.address[0] as `0x${string}`)
     : accountAddress
-  const [tabValue, setTabValue] = useState('items')
+  const [tabValue, setTabValue] = useState('create')
   const [itemView, setItemView] = useState<ItemView>('list')
 
   const [activityTypes, setActivityTypes] = useState<ActivityTypes>(['sale'])
@@ -182,6 +182,7 @@ const IndexPage: NextPage = () => {
 
   const onLogout = () => {
     localStorage.removeItem('accessToken')
+    localStorage.removeItem('userEmail')
     dispatch(setIsAuth({ isAuth: false }))
   }
 

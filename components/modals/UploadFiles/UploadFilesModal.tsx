@@ -12,6 +12,7 @@ import { addCid, clearCids } from '../../../redux/slices/uploadNFT'
 import { FaPauseCircle } from 'react-icons/fa'
 import { FaPlay } from 'react-icons/fa'
 import { MdCancel } from 'react-icons/md'
+import { FcFullTrash } from 'react-icons/fc'
 
 import store from '../../../redux/store'
 import { uploadNFT } from '../../../api/userNFT'
@@ -183,7 +184,7 @@ export function UploadFilesModal({ onClose }: Props) {
       setImages(sortedFiles)
 
       // Generate URLs for the newly accepted files
-      const newPreviewUrls = sortedFiles.map((file) =>
+      const newPreviewUrls = filteredFiles.map((file) =>
         URL.createObjectURL(file)
       )
 
@@ -348,6 +349,23 @@ export function UploadFilesModal({ onClose }: Props) {
     onClose()
   }
 
+  const handleDeleteFile = (fileIndex: number) => {
+    const newImages = images.filter(
+      (_: File, index: number) => index !== fileIndex
+    )
+    setImages(newImages)
+
+    const newMetadata = metadatas.filter(
+      (_: File, index: number) => index !== fileIndex
+    )
+    setMetadatas(newMetadata)
+
+    const newPreviewUrls = previewUrls.filter(
+      (_: string, index: number) => index !== fileIndex
+    )
+    setPreviewUrls(newPreviewUrls)
+  }
+
   function cleanUp() {
     setProgress(0)
     dispatch(clearCids())
@@ -375,6 +393,7 @@ export function UploadFilesModal({ onClose }: Props) {
               flexDirection: 'column',
               alignItems: 'center',
               gap: '15px',
+              width: '100%',
             }}
           >
             {!isStartClearingUploadedFiles ? (
@@ -414,8 +433,9 @@ export function UploadFilesModal({ onClose }: Props) {
                 </div>
                 <p className={styles.loader_title}>
                   Your files is uploading to a decentralized storage. Please
-                  wait and don't close the window. Approximately time for
-                  uploading is: {estimationTimeOfUploading} minutes.
+                  wait and don't close the window. <br />
+                  Approximately time for uploading is:{' '}
+                  {estimationTimeOfUploading} minutes.
                 </p>
               </>
             ) : (
@@ -449,13 +469,23 @@ export function UploadFilesModal({ onClose }: Props) {
               <div className={styles.images_preview}>
                 {previewUrls &&
                   previewUrls?.map((previewUrl: string, index) => (
-                    <img
-                      className={styles.preview_image}
-                      src={previewUrl}
-                      alt={
-                        images.length ? images?.[index]?.name : 'image preview'
-                      }
-                    />
+                    <div className={styles.preview_image_wrapper}>
+                      <img
+                        className={styles.preview_image}
+                        src={previewUrl}
+                        alt={
+                          images.length
+                            ? images?.[index]?.name
+                            : 'image preview'
+                        }
+                      />
+                      <div className={styles.overlay}>
+                        <FcFullTrash
+                          title={'Delete file'}
+                          onClick={() => handleDeleteFile(index)}
+                        />
+                      </div>
+                    </div>
                   ))}
               </div>
             </div>

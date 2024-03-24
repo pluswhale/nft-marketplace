@@ -81,16 +81,16 @@ const SignIn: FC<Props> = ({ onGoConnectWallet }) => {
         <>
           <p className={style.modal_title}>Sign in</p>
 
-          <div
-            onClick={handleLoginThroughGoogle}
-            className={style.loginMethods}
-          >
-            <img
-              src={`${process.env.NEXT_PUBLIC_HOST_URL}/icons/google-icon.png`}
-              alt="Google"
-            />
-            <p className={style.loginText}>Вход через Google</p>
-          </div>
+          {/*<div*/}
+          {/*  onClick={handleLoginThroughGoogle}*/}
+          {/*  className={style.loginMethods}*/}
+          {/*>*/}
+          {/*  <img*/}
+          {/*    src={`${process.env.NEXT_PUBLIC_HOST_URL}/icons/google-icon.png`}*/}
+          {/*    alt="Google"*/}
+          {/*  />*/}
+          {/*  <p className={style.loginText}>Вход через Google</p>*/}
+          {/*</div>*/}
 
           {/*<div className={style.loginMethods}>*/}
           {/*    <img src={ico2} alt="Facebook" />*/}

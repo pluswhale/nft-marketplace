@@ -28,12 +28,13 @@
 
   .content {
     z-index: 1000;
-    padding: 30px;
+    padding:  30px;
     background-color: white;
     border-radius: 24px;
     max-height: 90vh;
     max-width: 1200px;
     width: 1200px;
+    overflow-y: scroll;
 
     display: flex;
     flex-direction: column;
@@ -41,6 +42,24 @@
     align-items: center;
 
     gap: 20px;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background-color: transparent;
+      border-top-right-radius: 2px;
+      margin: 15px 0;
+
+
+    }
+
+    &::-webkit-scrollbar-thumb {
+      width: 5px;
+      background-color: #a9aeb2;
+      border-radius: 2px;
+    }
 
     .loader {
       width: 50px;
@@ -80,6 +99,8 @@
 
     .loader_title {
       font-size: 18px;
+      width: 100%;
+      text-align: center;
     }
 
     .images,
@@ -88,6 +109,10 @@
       flex-direction: column;
       gap: 15px;
       width: 100%;
+    }
+
+    .images {
+      margin-top: 150px;
     }
 
     .images_preview {
@@ -113,11 +138,38 @@
       }
     }
 
+    .preview_image_wrapper {
+      max-height: 150px;
+      max-width: 100px;
+      width: 100px;
+      position: relative;
+      transition: all .3s;
+    }
+
+    .preview_image_wrapper:hover .overlay {
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-start;
+    }
+
+    .overlay {
+      position: absolute;
+      display: none;
+      opacity: 0.7;
+      background-color: white;
+      top: 0;
+      left: 0;
+      width: 100px;
+      height: 150px;
+
+    }
+
     .preview_image {
       max-height: 150px;
       max-width: 100px;
       width: 100px;
       object-fit: fill;
+
     }
 
   }
