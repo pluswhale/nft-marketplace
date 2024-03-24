@@ -1,0 +1,20 @@
+.linear_progress_bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: inherit;
+}
+
+.progress_bar {
+  width: 100%;
+  margin-right: 5px;
+}
+
+.progress_percent_values {
+  min-width: 40px;
+
+  .percent_label {
+    font-size: 14px;
+    color: black;
+  }
+}

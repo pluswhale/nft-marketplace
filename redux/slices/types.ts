@@ -14,3 +14,7 @@ export type InitialStateType = {
   accounts: { email: string; password: string }[]
   isAuth: boolean
 }
+
+export type InitialStateUploadNFT = {
+  uploadedCids: string[]
+}

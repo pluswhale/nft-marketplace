@@ -4,10 +4,12 @@ import { AnyAction, configureStore, ThunkDispatch } from '@reduxjs/toolkit'
 
 import modal from './slices/modal'
 import auth from './slices/auth'
+import uploadNFT from './slices/uploadNFT'
 
 const rootReducer = combineReducers({
   modal,
   auth,
+  uploadNFT,
 })
 
 const store = configureStore({

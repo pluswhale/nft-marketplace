@@ -25,7 +25,8 @@ import { useSelector } from 'react-redux'
 import { isAuthSelector } from '../../redux/selectors/authSelectors'
 import style from '../modals/SignIn/steps/steps.module.scss'
 import * as React from 'react'
-import { setIsAuth } from '../../redux/slices/auth'
+import { setAuthData, setIsAuth } from '../../redux/slices/auth'
+import { authAPI } from '../../api/auth'
 
 export const NAVBAR_HEIGHT = 81
 export const NAVBAR_HEIGHT_MOBILE = 77
@@ -55,7 +56,15 @@ const Navbar = () => {
       typeof window !== 'undefined' && window.localStorage
         ? localStorage.getItem('accessToken')
         : null
-    dispatch(setIsAuth({ isAuth: !!JWT_TOKEN }))
+    const userEmail = localStorage.getItem('userEmail')
+
+    if (userEmail) {
+      authAPI.me({ email: userEmail }).then((res) => {
+        if (res && res?.data?.user) {
+          dispatch(setAuthData({ data: res.data.user }))
+        }
+      })
+    }
   }, [])
 
   if (!isMounted) {

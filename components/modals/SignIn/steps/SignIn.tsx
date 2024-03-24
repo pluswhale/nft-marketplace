@@ -42,6 +42,7 @@ const SignIn: FC<Props> = ({ onGoConnectWallet }) => {
             if (res.data.token) {
               dispatch(setAuthData({ data: res.data?.user }))
               localStorage.setItem('accessToken', res.data.token)
+              localStorage.setItem('userEmail', email)
             }
             setTimeout(() => {
               onGoConnectWallet('cw')
