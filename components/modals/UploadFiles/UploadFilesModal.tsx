@@ -1,5 +1,5 @@
 import Dropzone from '../../common/DropZone/DropZone'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { CSSProperties, useCallback, useEffect, useRef, useState } from 'react'
 const token =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDZCMzA3RjYzMEZFQjIzMTRjNjZiMzc3NEZlYzg1MkU5ODYxOTBkM0EiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTcxMDQwOTg4MzI3MywibmFtZSI6Im5mdC1tYXJrZXRwbGFjZSJ9.gRw8xMKCCO8mOfHKyWaWFbq2i6MW6S6E-e8ODuSQbRc'
 
@@ -18,6 +18,8 @@ import store from '../../../redux/store'
 import { uploadNFT } from '../../../api/userNFT'
 import { shallowEqual, useSelector } from 'react-redux'
 import { authUserIdSelector } from '../../../redux/selectors/authSelectors'
+
+import { GridVirtualList } from '../../virtual-lists/index'
 
 type Props = {
   onClose: () => void
@@ -70,7 +72,7 @@ const testJson = {
   ],
 }
 
-const LENGTH_OF_MOCK_FILES = 50
+const LENGTH_OF_MOCK_FILES = 10000
 
 export function UploadFilesModal({ onClose }: Props) {
   const dispatch = useAppDispatch()
@@ -94,39 +96,37 @@ export function UploadFilesModal({ onClose }: Props) {
 
   const waitForResume = async () => {
     while (isPaused.current) {
-      await sleep(100) // Check every 100ms if still paused
+      await sleep(100)
     }
   }
 
   useEffect(() => {
     const handleBeforeUnload = (event: any) => {
       if (isLoadingToIPFS) {
-        // Standard for most modern browsers
         event.preventDefault()
-        // For some older browsers
         event.returnValue =
           'Are you sure you want to leave? All progress will be lost.'
-        // Display the confirmation dialog
         return event.returnValue
       }
     }
 
-    // Add event listener if isLoadingToIPFS is true
     if (isLoadingToIPFS) {
       window.addEventListener('beforeunload', handleBeforeUnload)
     }
 
-    // Remove event listener on cleanup
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
     }
-  }, [isLoadingToIPFS]) // Only re-run the effect if isLoadingToIPFS changes
+  }, [isLoadingToIPFS])
 
   useEffect(() => {
-    const fetchImagesAndMetadata = async () => {
+    let globalImageIndex = 1
+    const fetchBatch = async (batchSize: number, startIndex = 0) => {
+      const endIndex = startIndex + batchSize
       const imageUrls = Array.from(
-        { length: LENGTH_OF_MOCK_FILES },
-        (_, index) => `https://picsum.photos/200/300?random=${index}`
+        { length: batchSize },
+        (_, index) =>
+          `https://picsum.photos/200/300?random=${startIndex + index}`
       )
 
       const imageResponses = await Promise.all(
@@ -136,37 +136,51 @@ export function UploadFilesModal({ onClose }: Props) {
         imageResponses.map((response) => response.blob())
       )
 
-      const imageFiles = imageBlobs.map((blob, index) => {
-        return new File([blob], `${index}.jpg`, { type: 'image/jpeg' })
+      const imageFiles = imageBlobs.map((blob) => {
+        // Use the global image index for naming
+        const fileName = `ak${globalImageIndex}.jpg`
+        globalImageIndex++ // Increment for the next image
+        return new File([blob], fileName, {
+          type: 'image/jpeg',
+        })
       })
-
-      setImages(imageFiles)
 
       const newPreviewUrls = imageFiles.map((file) => URL.createObjectURL(file))
 
-      // Update the previewUrls state by appending the new URLs
+      setImages((prevImages) => [...prevImages, ...imageFiles])
       setPreviewUrls((prevUrls) => [...prevUrls, ...newPreviewUrls])
 
-      const jsonFiles = Array.from(
-        { length: LENGTH_OF_MOCK_FILES },
-        (_, index) => {
-          return new File([JSON.stringify(testJson)], `${index}.json`, {
-            type: 'application/json',
-          })
-        }
-      )
-
-      setMetadatas(jsonFiles)
+      await sleep(1000)
     }
 
-    // fetchImagesAndMetadata()
+    const totalFiles = LENGTH_OF_MOCK_FILES
+    let batchSize = 10 // Default batch size
+
+    for (let startIndex = 0; startIndex < totalFiles; startIndex += batchSize) {
+      const remainingFiles = totalFiles - startIndex
+      batchSize = Math.min(batchSize, remainingFiles)
+
+      fetchBatch(batchSize, startIndex).catch(console.error)
+    }
+  }, [])
+
+  useEffect(() => {
+    const jsonFiles = Array.from(
+      { length: LENGTH_OF_MOCK_FILES },
+      (_, index) => {
+        return new File([JSON.stringify(testJson)], `ak${index + 1}.json`, {
+          type: 'application/json',
+        })
+      }
+    )
+
+    setMetadatas(jsonFiles)
   }, [])
 
   const onDropImages = useCallback(
     (acceptedFiles: File[]) => {
       setIsLoadingImages(true)
 
-      // Filter out files that are already in the state
       const filteredFiles = acceptedFiles.filter((newFile) => {
         return !images.some(
           (existingFile) =>
@@ -175,7 +189,6 @@ export function UploadFilesModal({ onClose }: Props) {
         )
       })
 
-      // Update the files state by appending the new, filtered files
       const updatedFiles = [...images, ...filteredFiles]
 
       // Sort files in name order
@@ -200,12 +213,11 @@ export function UploadFilesModal({ onClose }: Props) {
     (acceptedFiles: File[]) => {
       setIsLoadingMetadata(true)
 
+      console.log('acc', acceptedFiles)
       // Filter out files that are already in the state
       const filteredFiles = acceptedFiles.filter((newFile) => {
         return !metadatas.some(
-          (existingFile) =>
-            existingFile.name === newFile.name &&
-            existingFile.size === newFile.size
+          (existingFile) => existingFile.name === newFile.name
         )
       })
 
@@ -224,18 +236,13 @@ export function UploadFilesModal({ onClose }: Props) {
 
   function sortFilesByName(files: File[]) {
     return files.sort((a, b) => {
-      const nameA = a.name.split('.')[0]
-      const nameB = b.name.split('.')[0]
-      const isNameANumber = !isNaN(Number(nameA))
-      const isNameBNumber = !isNaN(Number(nameB))
+      const nameA = a.name.replace(/^\D+/g, '')
+      const nameB = b.name.replace(/^\D+/g, '')
 
-      if (isNameANumber && isNameBNumber) {
-        // Both file names start with numbers, sort numerically
-        return Number(nameA) - Number(nameB)
-      } else {
-        // At least one file name does not start with a number, sort alphabetically
-        return nameA.localeCompare(nameB)
-      }
+      const numA = parseInt(nameA, 10)
+      const numB = parseInt(nameB, 10)
+
+      return numA - numB
     })
   }
 
@@ -247,10 +254,9 @@ export function UploadFilesModal({ onClose }: Props) {
 
     for (let index = 0; index < filesLength; index++) {
       if (isCancelled.current) {
-        break // Exit the loop if cancelled
+        break
       }
 
-      // Wait if paused
       await waitForResume()
 
       const imageFile = images[index]
@@ -297,10 +303,8 @@ export function UploadFilesModal({ onClose }: Props) {
 
       setProgress(Math.floor((curFile / filesLength) * 100))
 
-      // Increment cur file count
       curFile = curFile + 1
 
-      // Wait before making the next request
       await sleep(delayBetweenUploads)
     }
 
@@ -371,7 +375,6 @@ export function UploadFilesModal({ onClose }: Props) {
     dispatch(clearCids())
   }
 
-  // Handlers to pause, resume, and cancel the upload
   const pauseUpload = () => {
     isPaused.current = true
   }
@@ -380,6 +383,68 @@ export function UploadFilesModal({ onClose }: Props) {
   }
   const cancelUpload = () => {
     isCancelled.current = true
+  }
+
+  const imagePreview = ({
+    columnIndex,
+    rowIndex,
+    style,
+  }: {
+    columnIndex: number
+    rowIndex: number
+    style: CSSProperties
+  }) => {
+    const index = rowIndex * 10 + columnIndex // Calculate index based on row and column
+
+    if (index >= images.length) {
+      return null
+    }
+
+    return (
+      <div style={style} className={styles.preview_image_wrapper}>
+        <img
+          className={styles.preview_image}
+          src={previewUrls[index]}
+          alt={images.length ? images?.[index]?.name : 'image preview'}
+        />
+        <div className={styles.overlay}>
+          <span className={styles.preview_image_name}>
+            {images?.[index]?.name}
+          </span>
+          <FcFullTrash
+            title="Delete file"
+            onClick={() => handleDeleteFile(index)}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  const jsonPreview = ({
+    columnIndex,
+    rowIndex,
+    style,
+  }: {
+    columnIndex: number
+    rowIndex: number
+    style: CSSProperties
+  }) => {
+    const index = rowIndex * 10 + columnIndex // Calculate index based on row and column
+
+    if (index >= images.length) {
+      return null
+    }
+
+    return (
+      <div style={style} className={styles.json_preview}>
+        <div>{metadatas?.[index]?.name}</div>
+        <img
+          className={styles.preview_image}
+          src={`${process.env.NEXT_PUBLIC_HOST_URL}/icons/json_format_icon.png`}
+          alt={metadatas?.length ? metadatas?.[index]?.name : 'image preview'}
+        />
+      </div>
+    )
   }
 
   return (
@@ -466,28 +531,21 @@ export function UploadFilesModal({ onClose }: Props) {
                 onDrop={onDropImages}
                 isLoading={isLoadingImages}
               />
-              <div className={styles.images_preview}>
-                {previewUrls &&
-                  previewUrls?.map((previewUrl: string, index) => (
-                    <div className={styles.preview_image_wrapper}>
-                      <img
-                        className={styles.preview_image}
-                        src={previewUrl}
-                        alt={
-                          images.length
-                            ? images?.[index]?.name
-                            : 'image preview'
-                        }
-                      />
-                      <div className={styles.overlay}>
-                        <FcFullTrash
-                          title={'Delete file'}
-                          onClick={() => handleDeleteFile(index)}
-                        />
-                      </div>
-                    </div>
-                  ))}
-              </div>
+
+              {previewUrls?.length && (
+                <GridVirtualList
+                  styles={{ gridGap: '10px' }}
+                  columnCount={10}
+                  columnWidth={100}
+                  height={250}
+                  rowCount={Math.ceil(previewUrls?.length / 10)}
+                  rowHeight={150}
+                  width={1105}
+                  gap={10}
+                >
+                  {imagePreview}
+                </GridVirtualList>
+              )}
             </div>
             <div className={styles.metadata}>
               <p>Upload the metadata</p>
@@ -500,22 +558,21 @@ export function UploadFilesModal({ onClose }: Props) {
                 onDrop={onDropMetadata}
                 isLoading={isLoadingMetadata}
               />
-              <div className={styles.images_preview}>
-                {metadatas &&
-                  metadatas?.map((metadata: File, index) => (
-                    <div className={styles.json_preview}>
-                      <div>{metadata.name}</div>
-                      <img
-                        className={styles.preview_image}
-                        src={`${process.env.NEXT_PUBLIC_HOST_URL}/icons/json_format_icon.png`}
-                        alt={
-                          metadatas.length
-                            ? metadatas[index].name
-                            : 'image preview'
-                        }
-                      />
-                    </div>
-                  ))}
+              <div className={styles.react_window_list_container}>
+                {metadatas?.length && (
+                  <GridVirtualList
+                    styles={{ gridGap: '10px' }}
+                    columnCount={10}
+                    columnWidth={100}
+                    height={250}
+                    rowCount={Math.ceil(metadatas?.length / 10)}
+                    rowHeight={150}
+                    width={1105}
+                    gap={10}
+                  >
+                    {jsonPreview}
+                  </GridVirtualList>
+                )}
               </div>
             </div>
             <button

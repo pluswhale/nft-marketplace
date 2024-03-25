@@ -47,6 +47,7 @@ import { useAppDispatch } from '../../redux/store'
 import { shallowEqual, useSelector } from 'react-redux'
 import { isAuthSelector } from '../../redux/selectors/authSelectors'
 import { shallow } from 'zustand/shallow'
+import { SavedArts } from '../../components/modals/SavedArts'
 
 type ActivityTypes = Exclude<
   NonNullable<
@@ -168,6 +169,9 @@ const IndexPage: NextPage = () => {
         case 'create':
           tab = 'create'
           break
+        case 'saved_arts':
+          tab = 'saved_arts'
+          break
       }
     }
     setTabValue(tab)
@@ -285,6 +289,7 @@ const IndexPage: NextPage = () => {
                         <TabsTrigger value="offers">Offers Made</TabsTrigger>
                         <TabsTrigger value="activity">Activity</TabsTrigger>
                         <TabsTrigger value="create">Create NFT</TabsTrigger>
+                        {/*<TabsTrigger value="saved_arts">Saved Arts</TabsTrigger>*/}
                       </TabsList>
                     </Flex>
                     <TabsContent value="items">
@@ -505,11 +510,15 @@ const IndexPage: NextPage = () => {
                         }}
                       >
                         <TabsTrigger value="create">Create NFT</TabsTrigger>
+                        <TabsTrigger value="saved_arts">Saved Arts</TabsTrigger>
                       </TabsList>
                     </Flex>
 
                     <TabsContent value="create">
                       <CreateNft />
+                    </TabsContent>
+                    <TabsContent value="saved_arts">
+                      <SavedArts />
                     </TabsContent>
                   </Tabs.Root>
                 </Box>

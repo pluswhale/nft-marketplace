@@ -144,12 +144,18 @@
       width: 100px;
       position: relative;
       transition: all .3s;
+
+
     }
 
     .preview_image_wrapper:hover .overlay {
       display: flex;
       justify-content: flex-end;
       align-items: flex-start;
+
+      .preview_image_name {
+        font-size: 14px;
+      }
     }
 
     .overlay {
@@ -161,6 +167,8 @@
       left: 0;
       width: 100px;
       height: 150px;
+
+
 
     }
 
