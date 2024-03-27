@@ -7,8 +7,6 @@ import {
   useRef,
   useState,
 } from 'react'
-const token =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDZCMzA3RjYzMEZFQjIzMTRjNjZiMzc3NEZlYzg1MkU5ODYxOTBkM0EiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTcxMDQwOTg4MzI3MywibmFtZSI6Im5mdC1tYXJrZXRwbGFjZSJ9.gRw8xMKCCO8mOfHKyWaWFbq2i6MW6S6E-e8ODuSQbRc'
 
 import styles from './upload_files_modal.module.scss'
 import { File, NFTStorage } from 'nft.storage'
@@ -20,24 +18,13 @@ import { FaPauseCircle } from 'react-icons/fa'
 import { FaPlay } from 'react-icons/fa'
 import { MdCancel } from 'react-icons/md'
 import { FcFullTrash } from 'react-icons/fc'
-
 import store from '../../../redux/store'
 import { uploadNFT } from '../../../api/userNFT'
 import { shallowEqual, useSelector } from 'react-redux'
 import { authUserIdSelector } from '../../../redux/selectors/authSelectors'
-
 import { generateMetadataContent } from '../../../utils/generateRandomPhrases'
-
 import { GridVirtualList } from '../../virtual-lists/index'
-import axios from 'axios'
 import { ToastContext } from '../../../context/ToastContextProvider'
-
-// import OpenAI from 'openai'
-//
-// const OpenAIClient = new OpenAI({
-//   organization: 'org-50domeIla7RsvV20hTQkIKOX',
-//   apiKey: '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',
-// })
 
 type Props = {
   onClose: () => void
@@ -99,7 +86,6 @@ export function UploadFilesModal({ onClose }: Props) {
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
   const [isLoadingToIPFS, setIsLoadingToIPFS] = useState<boolean>(false)
   const [isLoadingImages, setIsLoadingImages] = useState<boolean>(false)
-  const [isLoadingMetadata, setIsLoadingMetadata] = useState<boolean>(false)
   const [isStartClearingUploadedFiles, setIsStartClearingUploadedFiles] =
     useState<boolean>(false)
   const [progress, setProgress] = useState<number>(0)
@@ -211,19 +197,19 @@ export function UploadFilesModal({ onClose }: Props) {
         )
       })
 
-      const updatedFiles = [...images, ...filteredFiles]
+      const sortedFiles = sortFilesByName(filteredFiles)
 
-      const sortedFiles = sortFilesByName(updatedFiles)
+      const updatedFiles = [...images, ...sortedFiles]
 
-      setImages(sortedFiles)
+      setImages(updatedFiles)
 
-      const newPreviewUrls = filteredFiles.map((file) =>
+      const newPreviewUrls = sortedFiles.map((file) =>
         URL.createObjectURL(file)
       )
 
       setPreviewUrls((prevUrls) => [...prevUrls, ...newPreviewUrls])
 
-      const generatedMetadata = filteredFiles.map((file, index: number) => {
+      const generatedMetadata = sortedFiles.map((file, index: number) => {
         const cutFilaName = file?.name?.split('.')[0]
 
         const data = {
@@ -242,28 +228,6 @@ export function UploadFilesModal({ onClose }: Props) {
       setIsLoadingImages(false)
     },
     [images]
-  )
-
-  const onDropMetadata = useCallback(
-    (acceptedFiles: File[]) => {
-      setIsLoadingMetadata(true)
-
-      const filteredFiles = acceptedFiles.filter((newFile) => {
-        return !metadatas.some(
-          (existingFile) => existingFile.name === newFile.name
-        )
-      })
-
-      const updatedFiles = [...metadatas, ...filteredFiles]
-
-      // Sort files in name order
-      const sortedFiles = sortFilesByName(updatedFiles)
-
-      setMetadatas(sortedFiles)
-
-      setIsLoadingMetadata(false)
-    },
-    [metadatas]
   )
 
   function sortFilesByName(files: File[]) {
@@ -362,6 +326,7 @@ export function UploadFilesModal({ onClose }: Props) {
       console.log('Upload cancelled.')
     }
 
+    setProgress(0)
     !isCancelled.current &&
       addToast?.({ title: 'Your arts was uploaded.', status: 'success' })
     setIsLoadingToIPFS(false)
@@ -405,7 +370,6 @@ export function UploadFilesModal({ onClose }: Props) {
   }
 
   function cleanUp() {
-    setProgress(0)
     dispatch(clearCids())
   }
 
@@ -583,15 +547,6 @@ export function UploadFilesModal({ onClose }: Props) {
             </div>
             <div className={styles.metadata}>
               {metadatas?.length ? <p>Your Metadata</p> : null}
-              {/*<Dropzone*/}
-              {/*  title={'Drag and drop json or selected in files'}*/}
-              {/*  accept={{*/}
-              {/*    'application/json': ['.json'],*/}
-              {/*  }}*/}
-              {/*  multiple={true}*/}
-              {/*  onDrop={onDropMetadata}*/}
-              {/*  isLoading={isLoadingMetadata}*/}
-              {/*/>*/}
               <div className={styles.react_window_list_container}>
                 {metadatas?.length ? (
                   <GridVirtualList
@@ -629,9 +584,10 @@ export function UploadFilesModal({ onClose }: Props) {
     externalUrl: string,
     metadataAttributes: any
   ) {
-    const client = new NFTStorage({ token })
+    const client = new NFTStorage({
+      token: process.env.NFT_STORAGE_API_KEY || '',
+    })
 
-    // Preparing the file for upload
     const nftStorageFile = new File([file], file.name, { type: file.type })
 
     const nft = {
@@ -642,68 +598,14 @@ export function UploadFilesModal({ onClose }: Props) {
       attributes: metadataAttributes,
     }
 
-    // Ensure you await the store function
     return await client.store(nft)
   }
 }
 
 async function deleteFileFromNFTStorage(cid: string) {
-  const client = new NFTStorage({ token })
+  const client = new NFTStorage({
+    token: process.env.NFT_STORAGE_API_KEY || '',
+  })
 
   return await client.delete(cid)
-}
-
-async function getChatGPTDescription(body: any) {
-  const image = body.image
-  const askedText =
-    'Create for me metadata for this image in json format. JSON must include fields:\n' +
-    '\n' +
-    'name: appropriate image name,\n' +
-    'description: appropriate description of image,\n' +
-    'attributes: an array of type - trait_type: name of attribute, value: value of attribute ie (trait_type: hair, value: red)'
-
-  // OpenAI API Key
-  const api_key = 'org-50domeIla7RsvV20hTQkIKOX'
-
-  const headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${api_key}`,
-  }
-
-  const payload = {
-    model: 'gpt-4-vision-preview',
-    messages: [
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'text',
-            text: askedText,
-          },
-          {
-            type: 'image_url',
-            image_url: {
-              url: image,
-            },
-          },
-        ],
-      },
-    ],
-    max_tokens: 300,
-  }
-
-  try {
-    const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-
-      payload,
-
-      {
-        headers,
-      }
-    )
-    // await OpenAIClient.chat.completions.create(payload)
-  } catch (error) {
-    console.log('error', error)
-  }
 }
