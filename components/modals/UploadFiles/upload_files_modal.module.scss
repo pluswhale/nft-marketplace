@@ -111,9 +111,6 @@
       width: 100%;
     }
 
-    .images {
-      margin-top: 150px;
-    }
 
     .images_preview {
       display: flex;
@@ -175,8 +172,10 @@
     .preview_image {
       max-height: 150px;
       max-width: 100px;
+      height: 100%;
       width: 100px;
-      object-fit: fill;
+      object-fit: cover;
+      vertical-align: center;
 
     }
 

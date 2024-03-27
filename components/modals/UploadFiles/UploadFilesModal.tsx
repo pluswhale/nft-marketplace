@@ -1,5 +1,12 @@
 import Dropzone from '../../common/DropZone/DropZone'
-import { CSSProperties, useCallback, useEffect, useRef, useState } from 'react'
+import {
+  CSSProperties,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 const token =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDZCMzA3RjYzMEZFQjIzMTRjNjZiMzc3NEZlYzg1MkU5ODYxOTBkM0EiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTcxMDQwOTg4MzI3MywibmFtZSI6Im5mdC1tYXJrZXRwbGFjZSJ9.gRw8xMKCCO8mOfHKyWaWFbq2i6MW6S6E-e8ODuSQbRc'
 
@@ -19,7 +26,18 @@ import { uploadNFT } from '../../../api/userNFT'
 import { shallowEqual, useSelector } from 'react-redux'
 import { authUserIdSelector } from '../../../redux/selectors/authSelectors'
 
+import { generateMetadataContent } from '../../../utils/generateRandomPhrases'
+
 import { GridVirtualList } from '../../virtual-lists/index'
+import axios from 'axios'
+import { ToastContext } from '../../../context/ToastContextProvider'
+
+// import OpenAI from 'openai'
+//
+// const OpenAIClient = new OpenAI({
+//   organization: 'org-50domeIla7RsvV20hTQkIKOX',
+//   apiKey: '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',
+// })
 
 type Props = {
   onClose: () => void
@@ -72,7 +90,7 @@ const testJson = {
   ],
 }
 
-const LENGTH_OF_MOCK_FILES = 10000
+const LENGTH_OF_MOCK_FILES = 50
 
 export function UploadFilesModal({ onClose }: Props) {
   const dispatch = useAppDispatch()
@@ -89,6 +107,7 @@ export function UploadFilesModal({ onClose }: Props) {
   const isCancelled = useRef<any>(false)
   const authUserId = useSelector(authUserIdSelector, shallowEqual)
   let estimationTimeOfUploading = Math.ceil((images?.length * 2) / 60) // in mins
+  const { addToast } = useContext(ToastContext)
 
   function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms))
@@ -150,31 +169,34 @@ export function UploadFilesModal({ onClose }: Props) {
       setImages((prevImages) => [...prevImages, ...imageFiles])
       setPreviewUrls((prevUrls) => [...prevUrls, ...newPreviewUrls])
 
+      const generatedMetadata = imageFiles.map((file, index: number) => {
+        const cutFilaName = file?.name?.split('.')[0]
+
+        const data = {
+          name: generateMetadataContent(2)?.name,
+          description: generateMetadataContent(5)?.description,
+        }
+
+        return new File([JSON.stringify(data)], `${cutFilaName}.json`, {
+          type: 'application/json',
+        })
+      })
+
+      //@ts-ignore
+      setMetadatas((prevMetadatas) => [...prevMetadatas, ...generatedMetadata])
+
       await sleep(1000)
     }
 
     const totalFiles = LENGTH_OF_MOCK_FILES
-    let batchSize = 10 // Default batch size
+    let batchSize = 10
 
-    for (let startIndex = 0; startIndex < totalFiles; startIndex += batchSize) {
-      const remainingFiles = totalFiles - startIndex
-      batchSize = Math.min(batchSize, remainingFiles)
-
-      fetchBatch(batchSize, startIndex).catch(console.error)
-    }
-  }, [])
-
-  useEffect(() => {
-    const jsonFiles = Array.from(
-      { length: LENGTH_OF_MOCK_FILES },
-      (_, index) => {
-        return new File([JSON.stringify(testJson)], `ak${index + 1}.json`, {
-          type: 'application/json',
-        })
-      }
-    )
-
-    setMetadatas(jsonFiles)
+    // for (let startIndex = 0; startIndex < totalFiles; startIndex += batchSize) {
+    //   const remainingFiles = totalFiles - startIndex
+    //   batchSize = Math.min(batchSize, remainingFiles)
+    //
+    //   fetchBatch(batchSize, startIndex).catch(console.error)
+    // }
   }, [])
 
   const onDropImages = useCallback(
@@ -191,18 +213,31 @@ export function UploadFilesModal({ onClose }: Props) {
 
       const updatedFiles = [...images, ...filteredFiles]
 
-      // Sort files in name order
       const sortedFiles = sortFilesByName(updatedFiles)
 
       setImages(sortedFiles)
 
-      // Generate URLs for the newly accepted files
       const newPreviewUrls = filteredFiles.map((file) =>
         URL.createObjectURL(file)
       )
 
-      // Update the previewUrls state by appending the new URLs
       setPreviewUrls((prevUrls) => [...prevUrls, ...newPreviewUrls])
+
+      const generatedMetadata = filteredFiles.map((file, index: number) => {
+        const cutFilaName = file?.name?.split('.')[0]
+
+        const data = {
+          name: generateMetadataContent(2)?.name,
+          description: generateMetadataContent(5)?.description,
+        }
+
+        return new File([JSON.stringify(data)], `${cutFilaName}.json`, {
+          type: 'application/json',
+        })
+      })
+
+      //@ts-ignore
+      setMetadatas((prevMetadatas) => [...prevMetadatas, ...generatedMetadata])
 
       setIsLoadingImages(false)
     },
@@ -213,15 +248,12 @@ export function UploadFilesModal({ onClose }: Props) {
     (acceptedFiles: File[]) => {
       setIsLoadingMetadata(true)
 
-      console.log('acc', acceptedFiles)
-      // Filter out files that are already in the state
       const filteredFiles = acceptedFiles.filter((newFile) => {
         return !metadatas.some(
           (existingFile) => existingFile.name === newFile.name
         )
       })
 
-      // Update the files state by appending the new, filtered files
       const updatedFiles = [...metadatas, ...filteredFiles]
 
       // Sort files in name order
@@ -262,7 +294,7 @@ export function UploadFilesModal({ onClose }: Props) {
       const imageFile = images[index]
       const metadataFile = metadatas[index]
       if (!metadataFile) {
-        continue // Skip if no corresponding metadata file
+        continue
       }
 
       try {
@@ -330,6 +362,8 @@ export function UploadFilesModal({ onClose }: Props) {
       console.log('Upload cancelled.')
     }
 
+    !isCancelled.current &&
+      addToast?.({ title: 'Your arts was uploaded.', status: 'success' })
     setIsLoadingToIPFS(false)
     isPaused.current = false
     isCancelled.current = false
@@ -532,12 +566,12 @@ export function UploadFilesModal({ onClose }: Props) {
                 isLoading={isLoadingImages}
               />
 
-              {previewUrls?.length && (
+              {previewUrls?.length ? (
                 <GridVirtualList
                   styles={{ gridGap: '10px' }}
                   columnCount={10}
                   columnWidth={100}
-                  height={250}
+                  height={previewUrls?.length < 11 ? 150 : 250}
                   rowCount={Math.ceil(previewUrls?.length / 10)}
                   rowHeight={150}
                   width={1105}
@@ -545,26 +579,26 @@ export function UploadFilesModal({ onClose }: Props) {
                 >
                   {imagePreview}
                 </GridVirtualList>
-              )}
+              ) : null}
             </div>
             <div className={styles.metadata}>
-              <p>Upload the metadata</p>
-              <Dropzone
-                title={'Drag and drop json or selected in files'}
-                accept={{
-                  'application/json': ['.json'],
-                }}
-                multiple={true}
-                onDrop={onDropMetadata}
-                isLoading={isLoadingMetadata}
-              />
+              {metadatas?.length ? <p>Your Metadata</p> : null}
+              {/*<Dropzone*/}
+              {/*  title={'Drag and drop json or selected in files'}*/}
+              {/*  accept={{*/}
+              {/*    'application/json': ['.json'],*/}
+              {/*  }}*/}
+              {/*  multiple={true}*/}
+              {/*  onDrop={onDropMetadata}*/}
+              {/*  isLoading={isLoadingMetadata}*/}
+              {/*/>*/}
               <div className={styles.react_window_list_container}>
-                {metadatas?.length && (
+                {metadatas?.length ? (
                   <GridVirtualList
                     styles={{ gridGap: '10px' }}
                     columnCount={10}
                     columnWidth={100}
-                    height={250}
+                    height={metadatas?.length < 11 ? 150 : 250}
                     rowCount={Math.ceil(metadatas?.length / 10)}
                     rowHeight={150}
                     width={1105}
@@ -572,7 +606,7 @@ export function UploadFilesModal({ onClose }: Props) {
                   >
                     {jsonPreview}
                   </GridVirtualList>
-                )}
+                ) : null}
               </div>
             </div>
             <button
@@ -617,4 +651,59 @@ async function deleteFileFromNFTStorage(cid: string) {
   const client = new NFTStorage({ token })
 
   return await client.delete(cid)
+}
+
+async function getChatGPTDescription(body: any) {
+  const image = body.image
+  const askedText =
+    'Create for me metadata for this image in json format. JSON must include fields:\n' +
+    '\n' +
+    'name: appropriate image name,\n' +
+    'description: appropriate description of image,\n' +
+    'attributes: an array of type - trait_type: name of attribute, value: value of attribute ie (trait_type: hair, value: red)'
+
+  // OpenAI API Key
+  const api_key = 'org-50domeIla7RsvV20hTQkIKOX'
+
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${api_key}`,
+  }
+
+  const payload = {
+    model: 'gpt-4-vision-preview',
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: askedText,
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: image,
+            },
+          },
+        ],
+      },
+    ],
+    max_tokens: 300,
+  }
+
+  try {
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+
+      payload,
+
+      {
+        headers,
+      }
+    )
+    // await OpenAIClient.chat.completions.create(payload)
+  } catch (error) {
+    console.log('error', error)
+  }
 }

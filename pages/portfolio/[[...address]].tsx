@@ -188,6 +188,7 @@ const IndexPage: NextPage = () => {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('userEmail')
     dispatch(setIsAuth({ isAuth: false }))
+    router.push('/')
   }
 
   if (!isMounted) {
@@ -510,16 +511,16 @@ const IndexPage: NextPage = () => {
                         }}
                       >
                         <TabsTrigger value="create">Create NFT</TabsTrigger>
-                        <TabsTrigger value="saved_arts">Saved Arts</TabsTrigger>
+                        {/*<TabsTrigger value="saved_arts">Saved Arts</TabsTrigger>*/}
                       </TabsList>
                     </Flex>
 
                     <TabsContent value="create">
                       <CreateNft />
                     </TabsContent>
-                    <TabsContent value="saved_arts">
-                      <SavedArts />
-                    </TabsContent>
+                    {/*<TabsContent value="saved_arts">*/}
+                    {/*  <SavedArts />*/}
+                    {/*</TabsContent>*/}
                   </Tabs.Root>
                 </Box>
               )}
