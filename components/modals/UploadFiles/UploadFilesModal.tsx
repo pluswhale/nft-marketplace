@@ -26,6 +26,9 @@ import { generateMetadataContent } from '../../../utils/generateRandomPhrases'
 import { GridVirtualList } from '../../virtual-lists/index'
 import { ToastContext } from '../../../context/ToastContextProvider'
 
+const NFT_STORAGE_TOKEN =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDZCMzA3RjYzMEZFQjIzMTRjNjZiMzc3NEZlYzg1MkU5ODYxOTBkM0EiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTcxMDQwOTg4MzI3MywibmFtZSI6Im5mdC1tYXJrZXRwbGFjZSJ9.gRw8xMKCCO8mOfHKyWaWFbq2i6MW6S6E-e8ODuSQbRc'
+
 type Props = {
   onClose: () => void
 }
@@ -585,7 +588,7 @@ export function UploadFilesModal({ onClose }: Props) {
     metadataAttributes: any
   ) {
     const client = new NFTStorage({
-      token: process.env.NFT_STORAGE_API_KEY || '',
+      token: process.env.NFT_STORAGE_API_KEY || NFT_STORAGE_TOKEN,
     })
 
     const nftStorageFile = new File([file], file.name, { type: file.type })
@@ -604,7 +607,7 @@ export function UploadFilesModal({ onClose }: Props) {
 
 async function deleteFileFromNFTStorage(cid: string) {
   const client = new NFTStorage({
-    token: process.env.NFT_STORAGE_API_KEY || '',
+    token: process.env.NFT_STORAGE_API_KEY || NFT_STORAGE_TOKEN,
   })
 
   return await client.delete(cid)

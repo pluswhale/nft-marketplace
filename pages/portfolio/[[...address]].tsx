@@ -511,16 +511,16 @@ const IndexPage: NextPage = () => {
                         }}
                       >
                         <TabsTrigger value="create">Create NFT</TabsTrigger>
-                        {/*<TabsTrigger value="saved_arts">Saved Arts</TabsTrigger>*/}
+                        <TabsTrigger value="saved_arts">Saved Arts</TabsTrigger>
                       </TabsList>
                     </Flex>
 
                     <TabsContent value="create">
                       <CreateNft />
                     </TabsContent>
-                    {/*<TabsContent value="saved_arts">*/}
-                    {/*  <SavedArts />*/}
-                    {/*</TabsContent>*/}
+                    <TabsContent value="saved_arts">
+                      <SavedArts />
+                    </TabsContent>
                   </Tabs.Root>
                 </Box>
               )}
