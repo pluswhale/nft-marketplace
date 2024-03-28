@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react'
+import { uploadNFT } from '../../api/userNFT'
+import { shallowEqual, useSelector } from 'react-redux'
+import { authUserIdSelector } from '../../redux/selectors/authSelectors'
 
 type Props = {}
 
 export function SavedArts(props: Props) {
   const [savedArts, setSavedArts] = useState<any[]>([])
 
+  const userId = useSelector(authUserIdSelector, shallowEqual)
+
   useEffect(() => {
-    fetch('api/fetchArtByCid').then((res) => {
-      console.log('res', res)
+    uploadNFT.getAllSavedArts(userId).then((res) => {
+      if (res.data.userItems) {
+        setSavedArts(res.data.userItems)
+      }
     })
   }, [])
 
@@ -32,31 +39,9 @@ export function SavedArts(props: Props) {
               <p>Description: {art.description}</p>
               <p>Created: {art.created_at}</p>
               <p>CID: {art.cid}</p>
-              {art.imageUrl && (
-                <img
-                  src={
-                    'https://ipfs.io/ipfs/bafyreihoub2otpyba6n5zkceuwlm222safwjhftyrwoc42aotopgozvm3m'
-                  }
-                  alt={`Art ${index + 1}`}
-                  style={{ width: '100px', height: '100px' }}
-                />
-              )}
-              {art.metadata && (
-                <>
-                  <p>Metadata Name: {art.metadata.name}</p>
-                  <p>Metadata Description: {art.metadata.description}</p>
-                </>
-              )}
             </div>
           </div>
         ))}
-      <img
-        src={
-          'https://ipfs.io/ipfs/bafyreihoub2otpyba6n5zkceuwlm222safwjhftyrwoc42aotopgozvm3m'
-        }
-        alt={`Art`}
-        style={{ width: '100px', height: '100px' }}
-      />
     </div>
   )
 }
