@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { uploadNFT } from '../../api/userNFT'
 import { shallowEqual, useSelector } from 'react-redux'
 import { authUserIdSelector } from '../../redux/selectors/authSelectors'
+import dayjs from 'dayjs'
 
 type Props = {}
 
@@ -13,7 +14,7 @@ export function SavedArts(props: Props) {
   useEffect(() => {
     uploadNFT.getAllSavedArts(userId).then((res) => {
       if (res.data.userItems) {
-        setSavedArts(res.data.userItems)
+        setSavedArts(res.data.userItems?.reverse() || [])
       }
     })
   }, [])
@@ -37,7 +38,7 @@ export function SavedArts(props: Props) {
               <p>{index + 1}</p>
               <p>Name: {art.name}</p>
               <p>Description: {art.description}</p>
-              <p>Created: {art.created_at}</p>
+              <p>Created: {dayjs(art.createdAt).format('YYYY-MM-DD-HH:MM')}</p>
               <p>CID: {art.cid}</p>
             </div>
           </div>
