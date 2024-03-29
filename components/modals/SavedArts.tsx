@@ -3,6 +3,7 @@ import { uploadNFT } from '../../api/userNFT'
 import { shallowEqual, useSelector } from 'react-redux'
 import { authUserIdSelector } from '../../redux/selectors/authSelectors'
 import dayjs from 'dayjs'
+import axios from 'axios'
 
 type Props = {}
 
@@ -18,8 +19,6 @@ export function SavedArts(props: Props) {
       }
     })
   }, [])
-
-  console.log(savedArts, '202020')
 
   return (
     <div>
@@ -39,6 +38,7 @@ export function SavedArts(props: Props) {
               <p>Name: {art.name}</p>
               <p>Description: {art.description}</p>
               <p>Created: {dayjs(art.createdAt).format('YYYY-MM-DD-HH:MM')}</p>
+              <p>Resolution: {art?.resolution && art?.resolution} </p>
               <p>CID: {art.cid}</p>
             </div>
           </div>

@@ -25,6 +25,7 @@ import { authUserIdSelector } from '../../../redux/selectors/authSelectors'
 import { generateMetadataContent } from '../../../utils/generateRandomPhrases'
 import { GridVirtualList } from '../../virtual-lists/index'
 import { ToastContext } from '../../../context/ToastContextProvider'
+import { checkImageResolution } from '../../../utils/checkImageResolution'
 
 const NFT_STORAGE_TOKEN =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDZCMzA3RjYzMEZFQjIzMTRjNjZiMzc3NEZlYzg1MkU5ODYxOTBkM0EiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTcxMDQwOTg4MzI3MywibmFtZSI6Im5mdC1tYXJrZXRwbGFjZSJ9.gRw8xMKCCO8mOfHKyWaWFbq2i6MW6S6E-e8ODuSQbRc'
@@ -188,6 +189,51 @@ export function UploadFilesModal({ onClose }: Props) {
     // }
   }, [])
 
+  // const onDropImages = useCallback(
+  //   (acceptedFiles: File[]) => {
+  //     setIsLoadingImages(true)
+  //
+  //     const filteredFiles = acceptedFiles.filter((newFile) => {
+  //       return !images.some(
+  //         (existingFile) =>
+  //           existingFile.name === newFile.name &&
+  //           existingFile.size === newFile.size
+  //       )
+  //     })
+  //
+  //     const sortedFiles = sortFilesByName(filteredFiles)
+  //
+  //     const updatedFiles = [...images, ...sortedFiles]
+  //
+  //     setImages(updatedFiles)
+  //
+  //     const newPreviewUrls = sortedFiles.map((file) =>
+  //       URL.createObjectURL(file)
+  //     )
+  //
+  //     setPreviewUrls((prevUrls) => [...prevUrls, ...newPreviewUrls])
+  //
+  //     const generatedMetadata = sortedFiles.map((file, index: number) => {
+  //       const cutFilaName = file?.name?.split('.')[0]
+  //
+  //       const data = {
+  //         name: generateMetadataContent(2)?.name,
+  //         description: generateMetadataContent(5)?.description,
+  //       }
+  //
+  //       return new File([JSON.stringify(data)], `${cutFilaName}.json`, {
+  //         type: 'application/json',
+  //       })
+  //     })
+  //
+  //     //@ts-ignore
+  //     setMetadatas((prevMetadatas) => [...prevMetadatas, ...generatedMetadata])
+  //
+  //     setIsLoadingImages(false)
+  //   },
+  //   [images]
+  // )
+
   const onDropImages = useCallback(
     (acceptedFiles: File[]) => {
       setIsLoadingImages(true)
@@ -202,33 +248,62 @@ export function UploadFilesModal({ onClose }: Props) {
 
       const sortedFiles = sortFilesByName(filteredFiles)
 
-      const updatedFiles = [...images, ...sortedFiles]
+      // Asynchronously determine the resolution of each image and generate metadata
+      const imageLoadPromises = sortedFiles.map((file) => {
+        return new Promise((resolve, reject) => {
+          const image = new Image()
+          image.onload = () => {
+            const resolution = checkImageResolution(image.width, image.height)
 
-      setImages(updatedFiles)
+            console.log('resolution', resolution)
 
-      const newPreviewUrls = sortedFiles.map((file) =>
-        URL.createObjectURL(file)
-      )
-
-      setPreviewUrls((prevUrls) => [...prevUrls, ...newPreviewUrls])
-
-      const generatedMetadata = sortedFiles.map((file, index: number) => {
-        const cutFilaName = file?.name?.split('.')[0]
-
-        const data = {
-          name: generateMetadataContent(2)?.name,
-          description: generateMetadataContent(5)?.description,
-        }
-
-        return new File([JSON.stringify(data)], `${cutFilaName}.json`, {
-          type: 'application/json',
+            const cutFileName = file.name.split('.')[0]
+            const data = {
+              name: generateMetadataContent(2)?.name,
+              description: generateMetadataContent(5)?.description,
+              resolution,
+            }
+            const metadataFile = new File(
+              [JSON.stringify(data)],
+              `${cutFileName}.json`,
+              {
+                type: 'application/json',
+              }
+            )
+            resolve({
+              file,
+              metadataFile,
+              previewUrl: URL.createObjectURL(file),
+            })
+          }
+          image.onerror = reject
+          image.src = URL.createObjectURL(file)
         })
       })
 
-      //@ts-ignore
-      setMetadatas((prevMetadatas) => [...prevMetadatas, ...generatedMetadata])
+      Promise.all(imageLoadPromises)
+        .then((results) => {
+          const updatedFiles = [...images, ...sortedFiles]
+          setImages(updatedFiles)
 
-      setIsLoadingImages(false)
+          //@ts-ignore
+          const newPreviewUrls = results.map((result) => result.previewUrl)
+          setPreviewUrls((prevUrls) => [...prevUrls, ...newPreviewUrls])
+
+          //@ts-ignore
+          const generatedMetadata = results.map((result) => result.metadataFile)
+          //@ts-ignore
+          setMetadatas((prevMetadatas) => [
+            ...prevMetadatas,
+            ...generatedMetadata,
+          ])
+
+          setIsLoadingImages(false)
+        })
+        .catch((error) => {
+          console.error('Error loading one or more images:', error)
+          setIsLoadingImages(false)
+        })
     },
     [images]
   )
@@ -268,6 +343,7 @@ export function UploadFilesModal({ onClose }: Props) {
         const metadataText: any = await readMetadataFile(metadataFile)
         const metadataJson = JSON.parse(metadataText)
 
+        // Upload to Filecoin
         const response: any = await uploadFile(
           imageFile,
           metadataJson.name,
@@ -283,9 +359,11 @@ export function UploadFilesModal({ onClose }: Props) {
             name: metadataJson?.name,
             description: metadataJson.description,
             cid: response.ipnft,
+            resolution: metadataJson?.resolution,
             minted: false,
           }
 
+          // Store in DB
           const res = await uploadNFT.saveUserUploadedArt(savedData)
 
           if (res.status === 200) {

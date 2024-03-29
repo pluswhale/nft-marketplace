@@ -15,4 +15,5 @@ export type SaveUserArtData = {
   description: string
   cid: string
   minted: boolean
+  resolution: string
 }
