@@ -26,6 +26,7 @@ import { generateMetadataContent } from '../../../utils/generateRandomPhrases'
 import { GridVirtualList } from '../../virtual-lists/index'
 import { ToastContext } from '../../../context/ToastContextProvider'
 import { checkImageResolution } from '../../../utils/checkImageResolution'
+import { TfiReload } from 'react-icons/tfi'
 
 const NFT_STORAGE_TOKEN =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDZCMzA3RjYzMEZFQjIzMTRjNjZiMzc3NEZlYzg1MkU5ODYxOTBkM0EiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTcxMDQwOTg4MzI3MywibmFtZSI6Im5mdC1tYXJrZXRwbGFjZSJ9.gRw8xMKCCO8mOfHKyWaWFbq2i6MW6S6E-e8ODuSQbRc'
@@ -81,7 +82,7 @@ const testJson = {
   ],
 }
 
-const LENGTH_OF_MOCK_FILES = 50
+const LENGTH_OF_MOCK_FILES = 10
 
 export function UploadFilesModal({ onClose }: Props) {
   const dispatch = useAppDispatch()
@@ -90,6 +91,8 @@ export function UploadFilesModal({ onClose }: Props) {
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
   const [isLoadingToIPFS, setIsLoadingToIPFS] = useState<boolean>(false)
   const [isLoadingImages, setIsLoadingImages] = useState<boolean>(false)
+  const [isRegeneratingMetadata, setIsRegeneratingMetadata] =
+    useState<boolean>(false)
   const [isStartClearingUploadedFiles, setIsStartClearingUploadedFiles] =
     useState<boolean>(false)
   const [progress, setProgress] = useState<number>(0)
@@ -255,8 +258,6 @@ export function UploadFilesModal({ onClose }: Props) {
           image.onload = () => {
             const resolution = checkImageResolution(image.width, image.height)
 
-            console.log('resolution', resolution)
-
             const cutFileName = file.name.split('.')[0]
             const data = {
               name: generateMetadataContent(2)?.name,
@@ -343,7 +344,6 @@ export function UploadFilesModal({ onClose }: Props) {
         const metadataText: any = await readMetadataFile(metadataFile)
         const metadataJson = JSON.parse(metadataText)
 
-        // Upload to Filecoin
         const response: any = await uploadFile(
           imageFile,
           metadataJson.name,
@@ -413,6 +413,57 @@ export function UploadFilesModal({ onClose }: Props) {
     setIsLoadingToIPFS(false)
     isPaused.current = false
     isCancelled.current = false
+  }
+
+  const onRegenerateMetadata = () => {
+    setIsRegeneratingMetadata(true)
+    const imageLoadPromises = images.map((file) => {
+      return new Promise((resolve, reject) => {
+        const image = new Image()
+        image.onload = () => {
+          const resolution = checkImageResolution(image.width, image.height)
+
+          const cutFileName = file.name.split('.')[0]
+          const data = {
+            name: generateMetadataContent(2)?.name,
+            description: generateMetadataContent(5)?.description,
+            resolution,
+          }
+          const metadataFile = new File(
+            [JSON.stringify(data)],
+            `${cutFileName}.json`,
+            {
+              type: 'application/json',
+            }
+          )
+          resolve({
+            file,
+            metadataFile,
+            previewUrl: URL.createObjectURL(file),
+          })
+        }
+        image.onerror = reject
+        image.src = URL.createObjectURL(file)
+      })
+    })
+
+    Promise.all(imageLoadPromises)
+      .then((results) => {
+        //@ts-ignore
+
+        //@ts-ignore
+        const generatedMetadata = results.map((result) => result.metadataFile)
+        //@ts-ignore
+        setMetadatas(generatedMetadata)
+      })
+      .catch((error) => {
+        console.error('Error loading one or more images:', error)
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setIsRegeneratingMetadata(false)
+        }, 2000)
+      })
   }
 
   const readMetadataFile = async (file: any) => {
@@ -526,6 +577,16 @@ export function UploadFilesModal({ onClose }: Props) {
     )
   }
 
+  console.log(
+    'regenerate metadata',
+    metadatas.map(async (file) => {
+      const metadataText: any = await readMetadataFile(file)
+      const metadataJson = JSON.parse(metadataText)
+
+      console.log(metadataJson)
+    })
+  )
+
   return (
     <div className={styles.container} role={'dialog'}>
       <div className={styles.overlay} onClick={handleCloseModal}></div>
@@ -600,7 +661,7 @@ export function UploadFilesModal({ onClose }: Props) {
         ) : (
           <>
             <div className={styles.images}>
-              <p>Upload the images</p>
+              <p style={{ fontWeight: 600 }}>Upload the images</p>
               <Dropzone
                 title={'Drag and drop images or selected in files'}
                 accept={{
@@ -627,22 +688,55 @@ export function UploadFilesModal({ onClose }: Props) {
               ) : null}
             </div>
             <div className={styles.metadata}>
-              {metadatas?.length ? <p>Your Metadata</p> : null}
-              <div className={styles.react_window_list_container}>
-                {metadatas?.length ? (
-                  <GridVirtualList
-                    styles={{ gridGap: '10px' }}
-                    columnCount={10}
-                    columnWidth={100}
-                    height={metadatas?.length < 11 ? 150 : 250}
-                    rowCount={Math.ceil(metadatas?.length / 10)}
-                    rowHeight={150}
-                    width={1105}
-                    gap={10}
+              {metadatas?.length ? (
+                <>
+                  <p style={{ fontWeight: 600 }}>Your Metadata</p>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      fontSize: '16px',
+                    }}
                   >
-                    {jsonPreview}
-                  </GridVirtualList>
-                ) : null}
+                    Press to automatically regenerate metadata -
+                    <button
+                      className={styles.button}
+                      style={{ width: 'fit-content' }}
+                      onClick={onRegenerateMetadata}
+                    >
+                      <TfiReload />
+                    </button>
+                  </div>
+                </>
+              ) : null}
+
+              <div className={styles.react_window_list_container}>
+                {isRegeneratingMetadata ? (
+                  <img
+                    className={styles.loader}
+                    style={{ width: '100px', height: '100px' }}
+                    src={`${process.env.NEXT_PUBLIC_HOST_URL}/loaders/loader_round.svg`}
+                    alt="loader"
+                  />
+                ) : (
+                  <>
+                    {metadatas?.length ? (
+                      <GridVirtualList
+                        styles={{ gridGap: '10px' }}
+                        columnCount={10}
+                        columnWidth={100}
+                        height={metadatas?.length < 11 ? 150 : 250}
+                        rowCount={Math.ceil(metadatas?.length / 10)}
+                        rowHeight={150}
+                        width={1105}
+                        gap={10}
+                      >
+                        {jsonPreview}
+                      </GridVirtualList>
+                    ) : null}
+                  </>
+                )}
               </div>
             </div>
             <button

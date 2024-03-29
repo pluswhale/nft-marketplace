@@ -5,7 +5,8 @@ export const uploadNFT = {
     Instance.post('store/user-art/', data),
   deleteUserUploadedArt: (cid: string) =>
     Instance.delete(`destroy/user-art/${cid}`),
-  getAllSavedArts: (userId: number) => Instance.get(`/user/${userId}/items`),
+  getAllSavedArts: (userId: number, page: number) =>
+    Instance.get(`/user/${userId}/items?page=${page}&pageSize=10`),
 }
 
 export type SaveUserArtData = {

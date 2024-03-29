@@ -3,27 +3,32 @@ import { uploadNFT } from '../../api/userNFT'
 import { shallowEqual, useSelector } from 'react-redux'
 import { authUserIdSelector } from '../../redux/selectors/authSelectors'
 import dayjs from 'dayjs'
-import axios from 'axios'
+import { Button } from '../primitives'
 
 type Props = {}
 
 export function SavedArts(props: Props) {
   const [savedArts, setSavedArts] = useState<any[]>([])
+  const [page, setPage] = useState(1)
 
   const userId = useSelector(authUserIdSelector, shallowEqual)
 
   useEffect(() => {
-    uploadNFT.getAllSavedArts(userId).then((res) => {
-      if (res.data.userItems) {
-        setSavedArts(res.data.userItems?.reverse() || [])
+    uploadNFT.getAllSavedArts(userId, page).then((res) => {
+      if (res.data.items) {
+        setSavedArts((prev) => [...prev, ...res?.data?.items])
       }
     })
-  }, [])
+  }, [page])
+
+  const handlePaginate = () => {
+    setPage((prev) => prev + 1)
+  }
 
   return (
     <div>
       {savedArts &&
-        savedArts.slice(0, 20)?.map((art, index) => (
+        savedArts.map((art, index) => (
           <div
             key={index}
             style={{
@@ -38,11 +43,14 @@ export function SavedArts(props: Props) {
               <p>Name: {art.name}</p>
               <p>Description: {art.description}</p>
               <p>Created: {dayjs(art.createdAt).format('YYYY-MM-DD-HH:MM')}</p>
-              <p>Resolution: {art?.resolution && art?.resolution} </p>
+              {art?.resolution ? <p>Resolution: {art?.resolution} </p> : null}
               <p>CID: {art.cid}</p>
             </div>
           </div>
         ))}
+      <Button color={'primary'} onClick={handlePaginate}>
+        Load more
+      </Button>
     </div>
   )
 }
