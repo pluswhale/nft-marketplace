@@ -10,6 +10,7 @@ type Props = {
     description: string
     name: string
     createdAt: string
+    themeName: string | null
     resolution?: string
     imageIpfsUrl?: string
     minted: boolean
@@ -27,7 +28,9 @@ export const SavedArtCard: FC<Props> = ({ art, onDelete }): ReactElement => {
     name,
     description,
     minted,
-  } = art
+    themeName,
+  } = art || {}
+
   return (
     <div className={styles.savedArt}>
       <div className={styles.savedArt__content}>
@@ -43,6 +46,7 @@ export const SavedArtCard: FC<Props> = ({ art, onDelete }): ReactElement => {
           <p className={styles.savedArt__text}>Resolution: {resolution} </p>
         ) : null}
         {!minted ? <p style={{ color: 'orangered' }}> Not minted yet</p> : null}
+        {themeName ? <p>Theme: {themeName}</p> : null}
         <div className={styles.savedArt__action_btns}>
           <Button
             disabled

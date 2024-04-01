@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { FC, ReactElement, useEffect, useState } from 'react'
 import { uploadNFT } from '../../api/userNFT'
 import { shallowEqual, useSelector } from 'react-redux'
 import { authUserIdSelector } from '../../redux/selectors/authSelectors'
@@ -13,9 +13,7 @@ const NFT_STORAGE_TOKEN =
 
 const IPFS_GATEWAY = 'https://ipfs.io/ipfs/'
 
-type Props = {}
-
-export function SavedArts(props: Props) {
+export const SavedArts: FC = (): ReactElement => {
   const [savedArts, setSavedArts] = useState<any[]>([])
   const [page, setPage] = useState(1)
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -50,6 +48,23 @@ export function SavedArts(props: Props) {
       .then(async (res) => {
         if (res.data.items) {
           const promises = res.data.items.map(async (art: any) => {
+            let themeName = ''
+            if (art.themeId) {
+              try {
+                const themeResponse = await uploadNFT.getCollectionThemeById(
+                  art.themeId as number
+                )
+                themeName =
+                  themeResponse?.data?.collectionTheme?.name?.replace(
+                    '_',
+                    ' '
+                  ) || ''
+              } catch (error) {
+                console.error('Error fetching theme name:', error)
+                // Handle the error appropriately, maybe set a default theme name or leave it empty
+              }
+            }
+
             if (art.cid) {
               try {
                 const response: any = await fetchWithTimeout(
@@ -79,13 +94,19 @@ export function SavedArts(props: Props) {
                     // If metadata fetch fails, proceed without imageUrl and metadataAttributes
                   }
                 }
-                return { ...art, imageIpfsUrl: imageUrl, metadataAttributes }
+
+                return {
+                  ...art,
+                  imageIpfsUrl: imageUrl,
+                  metadataAttributes,
+                  themeName,
+                }
               } catch (error) {
                 console.error('Error fetching decoded data:', error)
                 return art // In case of an error, return unmodified art object
               }
             } else {
-              return art
+              return { ...art, themeName }
             }
           })
 
@@ -103,10 +124,12 @@ export function SavedArts(props: Props) {
   }
 
   const onDeleteArt = async (cid: string) => {
-    await deleteFileFromNFTStorage(cid)
+    await fetch(`api/deleteArtFromNFTStorage?cid=${cid}`)
     await uploadNFT.deleteUserUploadedArt(cid)
     setSavedArts((prev) => prev.filter((art) => art.cid !== cid))
   }
+
+  console.log('art', savedArts)
 
   return (
     <div
@@ -125,7 +148,7 @@ export function SavedArts(props: Props) {
           flexWrap: 'wrap',
         }}
       >
-        {savedArts &&
+        {savedArts?.length > 0 &&
           !isLoading &&
           savedArts.map((art, index) => (
             <SavedArtCard
@@ -155,12 +178,4 @@ export function SavedArts(props: Props) {
       )}
     </div>
   )
-}
-
-async function deleteFileFromNFTStorage(cid: string) {
-  const client = new NFTStorage({
-    token: process.env.NFT_STORAGE_API_KEY || NFT_STORAGE_TOKEN,
-  })
-
-  return await client.delete(cid)
 }

@@ -24,13 +24,23 @@ export default async function handler(
   }
 }
 
-const fetchFromIPFS = async (ipfsPath: string): Promise<Uint8Array> => {
-  const response = await fetch(`${IPFS_GATEWAY}${ipfsPath}`)
-  if (!response.ok) {
-    throw new Error('Network response was not ok')
+const fetchFromIPFS = async (
+  ipfsPath: string,
+  retries = 3
+): Promise<Uint8Array> => {
+  try {
+    const response = await fetch(`${IPFS_GATEWAY}${ipfsPath}`)
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    }
+    const arrayBuffer = await response.arrayBuffer()
+    return new Uint8Array(arrayBuffer)
+  } catch (error) {
+    if (retries > 0) {
+      console.log(`Retrying... ${retries} attempts left`)
+      await new Promise((resolve) => setTimeout(resolve, 1000)) // wait for 1 second before retrying
+      return fetchFromIPFS(ipfsPath, retries - 1)
+    }
+    throw error
   }
-
-  // Read the response as ArrayBuffer and convert to Uint8Array
-  const arrayBuffer = await response.arrayBuffer()
-  return new Uint8Array(arrayBuffer)
 }

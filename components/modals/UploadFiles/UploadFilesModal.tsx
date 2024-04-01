@@ -9,7 +9,6 @@ import {
 } from 'react'
 
 import styles from './upload_files_modal.module.scss'
-import { File, NFTStorage } from 'nft.storage'
 import { CustomizedLinearProgressBar } from '../../linear-progress/CustomizedLinearProgressBar'
 import { normalizeProgress } from '../../../utils/normilizeProgress'
 import { useAppDispatch } from '../../../redux/store'
@@ -29,9 +28,9 @@ import { checkImageResolution } from '../../../utils/checkImageResolution'
 import { TfiReload } from 'react-icons/tfi'
 import Button from '../../primitives/Button'
 import { Input } from '../../primitives'
-
-const NFT_STORAGE_TOKEN =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDZCMzA3RjYzMEZFQjIzMTRjNjZiMzc3NEZlYzg1MkU5ODYxOTBkM0EiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTcxMDQwOTg4MzI3MywibmFtZSI6Im5mdC1tYXJrZXRwbGFjZSJ9.gRw8xMKCCO8mOfHKyWaWFbq2i6MW6S6E-e8ODuSQbRc'
+import axios from 'axios'
+import { sortFilesByName } from '../../../utils/sortFileByName'
+import { capitalizeFirstLetter } from '../../../utils/capitalizeFirstLetterInString'
 
 type Props = {
   onClose: () => void
@@ -54,22 +53,13 @@ export function UploadFilesModal({ onClose }: Props) {
     useState<boolean>(false)
   const [isStartClearingUploadedFiles, setIsStartClearingUploadedFiles] =
     useState<boolean>(false)
+  const [collectionTheme, setCollectionTheme] = useState<string | null>(null)
   const [progress, setProgress] = useState<number>(0)
   const isPaused = useRef<any>(false)
   const isCancelled = useRef<any>(false)
   const authUserId = useSelector(authUserIdSelector, shallowEqual)
   let estimationTimeOfUploading = Math.ceil((images?.length * 2) / 60) // in mins
   const { addToast } = useContext(ToastContext)
-
-  function sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms))
-  }
-
-  const waitForResume = async () => {
-    while (isPaused.current) {
-      await sleep(100)
-    }
-  }
 
   useEffect(() => {
     const handleBeforeUnload = (event: any) => {
@@ -151,101 +141,134 @@ export function UploadFilesModal({ onClose }: Props) {
     // }
   }, [])
 
+  const waitForResume = async () => {
+    while (isPaused.current) {
+      await sleep(100)
+    }
+  }
+
   const onDropImages = useCallback(
     (acceptedFiles: File[]) => {
       setIsLoadingImages(true)
 
-      const filteredFiles = acceptedFiles.filter((newFile) => {
-        return !images.some(
-          (existingFile) =>
-            existingFile.name === newFile.name &&
-            existingFile.size === newFile.size
+      // const filteredFiles = acceptedFiles.filter((newFile) => {
+      //   return !images.some(
+      //     (existingFile) =>
+      //       existingFile.name === newFile.name &&
+      //       existingFile.size === newFile.size
+      //   )
+      // })
+
+      // Organize files by folders
+      const filesByFolder = acceptedFiles.reduce((acc: any, file: any) => {
+        // Extract folder name from file path; this depends on your environment
+        const folderName = capitalizeFirstLetter(
+          file.path?.split('/')?.[1]?.split('/')?.[0]?.replace(' ', '_')
         )
-      })
+        setCollectionTheme(folderName)
+        if (!acc[folderName]) {
+          acc[folderName] = []
+        }
+        acc[folderName].push(file)
+        return acc
+      }, {})
 
-      const sortedFiles = sortFilesByName(filteredFiles)
-
-      // Generate new filenames based on user initials and serial number
-      const updatedFilesWithNewNames = sortedFiles.map((file, index) => {
-        const serialNumber = images.length + index + 1 // Assuming images is the current array of files
-        const extension = file.name.split('.').pop()
-        const newName = `${userInitials}${serialNumber
-          .toString()
-          .padStart(3, '0')}.${extension}`
-        return new File([file], newName, { type: file.type })
-      })
-
-      const imageLoadPromises = updatedFilesWithNewNames.map((file, index) => {
-        return new Promise((resolve, reject) => {
-          const image = new Image()
-          image.onload = () => {
-            const resolution = checkImageResolution(image.width, image.height)
-
-            const cutFileName = file.name.split('.')[0]
-            const data = {
-              name: generateMetadataContent(2)?.name,
-              description: generateMetadataContent(5)?.description,
-              resolution,
-            }
-            const metadataFile = new File(
-              [JSON.stringify(data)],
-              `${cutFileName}.json`,
-              {
-                type: 'application/json',
-              }
+      // Process files for each folder
+      Object.entries(filesByFolder).forEach(
+        ([folderName, files], folderIndex) => {
+          //@ts-ignore
+          const filteredFiles = files.filter((newFile) => {
+            return !images.some(
+              (existingFile) =>
+                existingFile.name === newFile.name &&
+                existingFile.size === newFile.size
             )
-            resolve({
-              file,
-              metadataFile,
-              previewUrl: URL.createObjectURL(file),
+          })
+
+          const sortedFiles = sortFilesByName(filteredFiles)
+
+          // Generate new filenames based on user initials and serial number
+          const updatedFilesWithNewNames = sortedFiles.map((file, index) => {
+            const serialNumber = images.length + index + 1 // Assuming images is the current array of files
+            const extension = file.name.split('.').pop()
+            const newName = `${userInitials}${serialNumber
+              .toString()
+              .padStart(3, '0')}.${extension}`
+            return new File([file], newName, { type: file.type })
+          })
+
+          const imageLoadPromises = updatedFilesWithNewNames.map(
+            (file, index) => {
+              return new Promise((resolve, reject) => {
+                const image = new Image()
+                image.onload = () => {
+                  const resolution = checkImageResolution(
+                    image.width,
+                    image.height
+                  )
+
+                  const cutFileName = file.name.split('.')[0]
+                  const data = {
+                    name: generateMetadataContent(2)?.name,
+                    description: generateMetadataContent(5)?.description,
+                    resolution,
+                  }
+                  const metadataFile = new File(
+                    [JSON.stringify(data)],
+                    `${cutFileName}.json`,
+                    {
+                      type: 'application/json',
+                    }
+                  )
+                  resolve({
+                    file,
+                    metadataFile,
+                    previewUrl: URL.createObjectURL(file),
+                  })
+                }
+                image.onerror = reject
+                image.src = URL.createObjectURL(file)
+              })
+            }
+          )
+
+          Promise.all(imageLoadPromises)
+            .then((results) => {
+              const updatedFiles = [...images, ...updatedFilesWithNewNames]
+              setImages(updatedFiles)
+
+              //@ts-ignore
+              const newPreviewUrls = results.map((result) => result.previewUrl)
+              setPreviewUrls((prevUrls) => [...prevUrls, ...newPreviewUrls])
+
+              //@ts-ignore
+              const generatedMetadata = results.map(
+                (result: any) => result.metadataFile
+              )
+              //@ts-ignore
+              setMetadatas((prevMetadatas) => [
+                ...prevMetadatas,
+                ...generatedMetadata,
+              ])
+
+              setIsLoadingImages(false)
             })
-          }
-          image.onerror = reject
-          image.src = URL.createObjectURL(file)
-        })
-      })
-
-      Promise.all(imageLoadPromises)
-        .then((results) => {
-          const updatedFiles = [...images, ...updatedFilesWithNewNames]
-          setImages(updatedFiles)
-
-          //@ts-ignore
-          const newPreviewUrls = results.map((result) => result.previewUrl)
-          setPreviewUrls((prevUrls) => [...prevUrls, ...newPreviewUrls])
-
-          //@ts-ignore
-          const generatedMetadata = results.map((result) => result.metadataFile)
-          //@ts-ignore
-          setMetadatas((prevMetadatas) => [
-            ...prevMetadatas,
-            ...generatedMetadata,
-          ])
-
-          setIsLoadingImages(false)
-        })
-        .catch((error) => {
-          console.error('Error loading one or more images:', error)
-          setIsLoadingImages(false)
-        })
+            .catch((error) => {
+              console.error('Error loading one or more images:', error)
+              setIsLoadingImages(false)
+            })
+        }
+      )
     },
     [images, userInitials]
   )
 
-  function sortFilesByName(files: File[]) {
-    return files.sort((a, b) => {
-      const nameA = a.name.replace(/^\D+/g, '')
-      const nameB = b.name.replace(/^\D+/g, '')
-
-      const numA = parseInt(nameA, 10)
-      const numB = parseInt(nameB, 10)
-
-      return numA - numB
-    })
-  }
-
   const handleUploadFiles = async () => {
     setIsLoadingToIPFS(true)
+    const themeId = (
+      await uploadNFT.createCollectionThemeByName(collectionTheme as string)
+    )?.data?.collectionTheme?.[0]?.id
+
     const delayBetweenUploads = 500 // Delay in milliseconds, adjust as needed
     const filesLength = Math.ceil(images?.length) || 0
     let curFile = 0
@@ -267,30 +290,36 @@ export function UploadFilesModal({ onClose }: Props) {
         const metadataText: any = await readMetadataFile(metadataFile)
         const metadataJson = JSON.parse(metadataText)
 
-        const response: any = await uploadFile(
-          imageFile,
-          metadataJson.name,
-          metadataJson.description,
-          metadataJson.external_url,
-          metadataJson.attributes
-        )
+        const formData = new FormData()
 
-        if (response.ipnft) {
+        formData.append('name', metadataJson?.name)
+        formData.append('description', metadataJson?.description)
+        metadataJson?.external_url &&
+          formData.append('externalUrl', metadataJson?.external_url)
+        metadataJson?.attributes &&
+          formData.append('metadataAttributes', metadataJson?.attributes)
+        formData.append('file', imageFile)
+
+        const response = await axios.post('/api/storeArtToIpfs', formData)
+
+        if (response.data?.ipnft) {
           const savedData = {
             userId: authUserId,
-            itemId: response?.ipnft,
+            itemId: response?.data?.ipnft,
             name: metadataJson?.name,
             description: metadataJson.description,
-            cid: response.ipnft,
+            cid: response?.data?.ipnft,
             resolution: metadataJson?.resolution,
             minted: false,
-          }
+          } as any
+
+          if (themeId) savedData.collectionThemeId = themeId
 
           // Store in DB
           const res = await uploadNFT.saveUserUploadedArt(savedData)
 
           if (res.status === 200) {
-            dispatch(addCid({ cid: response?.ipnft }))
+            dispatch(addCid({ cid: response?.data?.ipnft }))
           }
         }
 
@@ -314,7 +343,7 @@ export function UploadFilesModal({ onClose }: Props) {
       if (currentUploadedCids?.length) {
         for (const cid of currentUploadedCids) {
           try {
-            await deleteFileFromNFTStorage(cid)
+            await fetch(`api/deleteArtFromNFTStorage?cid=${cid}`)
             await uploadNFT.deleteUserUploadedArt(cid)
           } catch (error) {
             console.error(`Failed to delete CID: ${cid}`, error)
@@ -372,8 +401,6 @@ export function UploadFilesModal({ onClose }: Props) {
 
     Promise.all(imageLoadPromises)
       .then((results) => {
-        //@ts-ignore
-
         //@ts-ignore
         const generatedMetadata = results.map((result) => result.metadataFile)
         //@ts-ignore
@@ -604,6 +631,9 @@ export function UploadFilesModal({ onClose }: Props) {
                     <p style={{ color: 'gray' }}>
                       Your initials: {userInitials}
                     </p>
+                    <p style={{ color: 'gray' }}>
+                      Theme: {collectionTheme?.replace('_', ' ')}
+                    </p>
                   </div>
                   <p style={{ fontWeight: 600 }}>Upload the images</p>
                   <Dropzone
@@ -697,36 +727,8 @@ export function UploadFilesModal({ onClose }: Props) {
       </div>
     </div>
   )
-
-  async function uploadFile(
-    file: File,
-    name: string,
-    description: string,
-    externalUrl: string,
-    metadataAttributes: any
-  ) {
-    const client = new NFTStorage({
-      token: process.env.NFT_STORAGE_API_KEY || NFT_STORAGE_TOKEN,
-    })
-
-    const nftStorageFile = new File([file], file.name, { type: file.type })
-
-    const nft = {
-      image: nftStorageFile,
-      name,
-      description,
-      external_url: externalUrl,
-      attributes: metadataAttributes,
-    }
-
-    return await client.store(nft)
-  }
 }
 
-async function deleteFileFromNFTStorage(cid: string) {
-  const client = new NFTStorage({
-    token: process.env.NFT_STORAGE_API_KEY || NFT_STORAGE_TOKEN,
-  })
-
-  return await client.delete(cid)
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }

@@ -34,7 +34,13 @@ const Dropzone: FC<Props> = ({
         />
       ) : (
         <>
-          <input className={styles.dropzone__input} {...getInputProps()} />
+          <input
+            className={styles.dropzone__input}
+            {...getInputProps()}
+            directory=""
+            webkitdirectory=""
+            type={'file'}
+          />
           <p className={styles.dropzone__title}>{title}</p>
         </>
       )}
