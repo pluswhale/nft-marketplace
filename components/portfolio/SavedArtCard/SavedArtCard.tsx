@@ -34,10 +34,14 @@ export const SavedArtCard: FC<Props> = ({ art, onDelete }): ReactElement => {
         {imageIpfsUrl ? (
           <img className={styles.savedArt__cover} src={art.imageIpfsUrl} />
         ) : null}
-        <p>Name: {name}</p>
-        <p>Description: {description}</p>
-        <p>Created: {dayjs(createdAt).format('YYYY-MM-DD-HH:MM')}</p>
-        {resolution ? <p>Resolution: {resolution} </p> : null}
+        <p className={styles.savedArt__text}>Name: {name}</p>
+        <p className={styles.savedArt__text}>Description: {description}</p>
+        <p className={styles.savedArt__text}>
+          Created: {dayjs(createdAt).format('YYYY-MM-DD-HH:mm:ss')}
+        </p>
+        {resolution ? (
+          <p className={styles.savedArt__text}>Resolution: {resolution} </p>
+        ) : null}
         {!minted ? <p style={{ color: 'orangered' }}> Not minted yet</p> : null}
         <div className={styles.savedArt__action_btns}>
           <Button
