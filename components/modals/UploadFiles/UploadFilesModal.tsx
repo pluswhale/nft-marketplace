@@ -27,6 +27,8 @@ import { GridVirtualList } from '../../virtual-lists/index'
 import { ToastContext } from '../../../context/ToastContextProvider'
 import { checkImageResolution } from '../../../utils/checkImageResolution'
 import { TfiReload } from 'react-icons/tfi'
+import Button from '../../primitives/Button'
+import { Input } from '../../primitives'
 
 const NFT_STORAGE_TOKEN =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDZCMzA3RjYzMEZFQjIzMTRjNjZiMzc3NEZlYzg1MkU5ODYxOTBkM0EiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTcxMDQwOTg4MzI3MywibmFtZSI6Im5mdC1tYXJrZXRwbGFjZSJ9.gRw8xMKCCO8mOfHKyWaWFbq2i6MW6S6E-e8ODuSQbRc'
@@ -35,57 +37,14 @@ type Props = {
   onClose: () => void
 }
 
-const testJson = {
-  name: 'First Art',
-  description: 'The description of first art',
-  attributes: [
-    {
-      trait_type: 'Background',
-      value: 'Pastel Blue',
-    },
-    {
-      trait_type: 'Body',
-      value: 'Original',
-    },
-    {
-      trait_type: 'Expression',
-      value: 'Eyes',
-    },
-    {
-      trait_type: 'Top Tentacle Items',
-      value: 'Pink Umbrella',
-    },
-    {
-      trait_type: 'Neck Item',
-      value: 'White Ribbon',
-    },
-    {
-      trait_type: 'Head Item',
-      value: 'Sleeping Mask',
-    },
-    {
-      trait_type: 'Center Left Tentacle Item',
-      value: 'Calculator',
-    },
-    {
-      trait_type: 'Center Right Tentacle Item',
-      value: 'Yacht',
-    },
-    {
-      trait_type: 'Mid Left Tentacle Item',
-      value: 'ETH',
-    },
-    {
-      trait_type: 'Lore',
-      value: '263',
-    },
-  ],
-}
-
 const LENGTH_OF_MOCK_FILES = 10
 
 export function UploadFilesModal({ onClose }: Props) {
   const dispatch = useAppDispatch()
+  const [currentStep, setCurrentStep] = useState<
+    'input-initial' | 'upload-files'
+  >('input-initial')
+  const [userInitials, setUserInitials] = useState<string>('')
   const [images, setImages] = useState<File[]>([])
   const [metadatas, setMetadatas] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
@@ -192,51 +151,6 @@ export function UploadFilesModal({ onClose }: Props) {
     // }
   }, [])
 
-  // const onDropImages = useCallback(
-  //   (acceptedFiles: File[]) => {
-  //     setIsLoadingImages(true)
-  //
-  //     const filteredFiles = acceptedFiles.filter((newFile) => {
-  //       return !images.some(
-  //         (existingFile) =>
-  //           existingFile.name === newFile.name &&
-  //           existingFile.size === newFile.size
-  //       )
-  //     })
-  //
-  //     const sortedFiles = sortFilesByName(filteredFiles)
-  //
-  //     const updatedFiles = [...images, ...sortedFiles]
-  //
-  //     setImages(updatedFiles)
-  //
-  //     const newPreviewUrls = sortedFiles.map((file) =>
-  //       URL.createObjectURL(file)
-  //     )
-  //
-  //     setPreviewUrls((prevUrls) => [...prevUrls, ...newPreviewUrls])
-  //
-  //     const generatedMetadata = sortedFiles.map((file, index: number) => {
-  //       const cutFilaName = file?.name?.split('.')[0]
-  //
-  //       const data = {
-  //         name: generateMetadataContent(2)?.name,
-  //         description: generateMetadataContent(5)?.description,
-  //       }
-  //
-  //       return new File([JSON.stringify(data)], `${cutFilaName}.json`, {
-  //         type: 'application/json',
-  //       })
-  //     })
-  //
-  //     //@ts-ignore
-  //     setMetadatas((prevMetadatas) => [...prevMetadatas, ...generatedMetadata])
-  //
-  //     setIsLoadingImages(false)
-  //   },
-  //   [images]
-  // )
-
   const onDropImages = useCallback(
     (acceptedFiles: File[]) => {
       setIsLoadingImages(true)
@@ -251,8 +165,17 @@ export function UploadFilesModal({ onClose }: Props) {
 
       const sortedFiles = sortFilesByName(filteredFiles)
 
-      // Asynchronously determine the resolution of each image and generate metadata
-      const imageLoadPromises = sortedFiles.map((file) => {
+      // Generate new filenames based on user initials and serial number
+      const updatedFilesWithNewNames = sortedFiles.map((file, index) => {
+        const serialNumber = images.length + index + 1 // Assuming images is the current array of files
+        const extension = file.name.split('.').pop()
+        const newName = `${userInitials}${serialNumber
+          .toString()
+          .padStart(3, '0')}.${extension}`
+        return new File([file], newName, { type: file.type })
+      })
+
+      const imageLoadPromises = updatedFilesWithNewNames.map((file, index) => {
         return new Promise((resolve, reject) => {
           const image = new Image()
           image.onload = () => {
@@ -284,7 +207,7 @@ export function UploadFilesModal({ onClose }: Props) {
 
       Promise.all(imageLoadPromises)
         .then((results) => {
-          const updatedFiles = [...images, ...sortedFiles]
+          const updatedFiles = [...images, ...updatedFilesWithNewNames]
           setImages(updatedFiles)
 
           //@ts-ignore
@@ -306,7 +229,7 @@ export function UploadFilesModal({ onClose }: Props) {
           setIsLoadingImages(false)
         })
     },
-    [images]
+    [images, userInitials]
   )
 
   function sortFilesByName(files: File[]) {
@@ -577,16 +500,6 @@ export function UploadFilesModal({ onClose }: Props) {
     )
   }
 
-  console.log(
-    'regenerate metadata',
-    metadatas.map(async (file) => {
-      const metadataText: any = await readMetadataFile(file)
-      const metadataJson = JSON.parse(metadataText)
-
-      console.log(metadataJson)
-    })
-  )
-
   return (
     <div className={styles.container} role={'dialog'}>
       <div className={styles.overlay} onClick={handleCloseModal}></div>
@@ -660,92 +573,125 @@ export function UploadFilesModal({ onClose }: Props) {
           </div>
         ) : (
           <>
-            <div className={styles.images}>
-              <p style={{ fontWeight: 600 }}>Upload the images</p>
-              <Dropzone
-                title={'Drag and drop images or selected in files'}
-                accept={{
-                  'image/*': ['.jpeg', '.png', '.jpg'],
+            {currentStep === 'input-initial' ? (
+              <div
+                style={{
+                  display: 'flex',
+                  width: '100%',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
                 }}
-                multiple={true}
-                onDrop={onDropImages}
-                isLoading={isLoadingImages}
-              />
-
-              {previewUrls?.length ? (
-                <GridVirtualList
-                  styles={{ gridGap: '10px' }}
-                  columnCount={10}
-                  columnWidth={100}
-                  height={previewUrls?.length < 11 ? 150 : 250}
-                  rowCount={Math.ceil(previewUrls?.length / 10)}
-                  rowHeight={150}
-                  width={1105}
-                  gap={10}
+              >
+                <Input
+                  css={{ width: '500px' }}
+                  placeholder={
+                    'Type your initials. For example: If you are John Doe, type - jd'
+                  }
+                  value={userInitials}
+                  onChange={({ target }) => setUserInitials(target.value)}
+                />
+                <Button
+                  disabled={!userInitials}
+                  onClick={() => setCurrentStep('upload-files')}
                 >
-                  {imagePreview}
-                </GridVirtualList>
-              ) : null}
-            </div>
-            <div className={styles.metadata}>
-              {metadatas?.length ? (
-                <>
-                  <p style={{ fontWeight: 600 }}>Your Metadata</p>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      fontSize: '16px',
-                    }}
-                  >
-                    Press to automatically regenerate metadata -
-                    <button
-                      className={styles.button}
-                      style={{ width: 'fit-content' }}
-                      onClick={onRegenerateMetadata}
-                    >
-                      <TfiReload />
-                    </button>
-                  </div>
-                </>
-              ) : null}
-
-              <div className={styles.react_window_list_container}>
-                {isRegeneratingMetadata ? (
-                  <img
-                    className={styles.loader}
-                    style={{ width: '100px', height: '100px' }}
-                    src={`${process.env.NEXT_PUBLIC_HOST_URL}/loaders/loader_round.svg`}
-                    alt="loader"
-                  />
-                ) : (
-                  <>
-                    {metadatas?.length ? (
-                      <GridVirtualList
-                        styles={{ gridGap: '10px' }}
-                        columnCount={10}
-                        columnWidth={100}
-                        height={metadatas?.length < 11 ? 150 : 250}
-                        rowCount={Math.ceil(metadatas?.length / 10)}
-                        rowHeight={150}
-                        width={1105}
-                        gap={10}
-                      >
-                        {jsonPreview}
-                      </GridVirtualList>
-                    ) : null}
-                  </>
-                )}
+                  Go uploading
+                </Button>
               </div>
-            </div>
-            <button
-              className={styles.button}
-              onClick={handleUploadFiles}
-              type="button"
-            >
-              Upload files
-            </button>
+            ) : (
+              <>
+                <div className={styles.images}>
+                  <div>
+                    <p style={{ color: 'gray' }}>
+                      Your initials: {userInitials}
+                    </p>
+                  </div>
+                  <p style={{ fontWeight: 600 }}>Upload the images</p>
+                  <Dropzone
+                    title={'Drag and drop images or selected in files'}
+                    accept={{
+                      'image/*': ['.jpeg', '.png', '.jpg'],
+                    }}
+                    multiple={true}
+                    onDrop={onDropImages}
+                    isLoading={isLoadingImages}
+                  />
+
+                  {previewUrls?.length ? (
+                    <GridVirtualList
+                      styles={{ gridGap: '10px' }}
+                      columnCount={10}
+                      columnWidth={100}
+                      height={previewUrls?.length < 11 ? 150 : 150}
+                      rowCount={Math.ceil(previewUrls?.length / 10)}
+                      rowHeight={150}
+                      width={1105}
+                      gap={10}
+                    >
+                      {imagePreview}
+                    </GridVirtualList>
+                  ) : null}
+                </div>
+                <div className={styles.metadata}>
+                  {metadatas?.length ? (
+                    <>
+                      <p style={{ fontWeight: 600 }}>Your Metadata</p>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          fontSize: '16px',
+                        }}
+                      >
+                        Press to automatically regenerate metadata -
+                        <button
+                          className={styles.button}
+                          style={{ width: 'fit-content' }}
+                          onClick={onRegenerateMetadata}
+                        >
+                          <TfiReload />
+                        </button>
+                      </div>
+                    </>
+                  ) : null}
+
+                  <div className={styles.react_window_list_container}>
+                    {isRegeneratingMetadata ? (
+                      <img
+                        className={styles.loader}
+                        style={{ width: '100px', height: '100px' }}
+                        src={`${process.env.NEXT_PUBLIC_HOST_URL}/loaders/loader_round.svg`}
+                        alt="loader"
+                      />
+                    ) : (
+                      <>
+                        {metadatas?.length ? (
+                          <GridVirtualList
+                            styles={{ gridGap: '10px' }}
+                            columnCount={10}
+                            columnWidth={100}
+                            height={metadatas?.length < 11 ? 150 : 150}
+                            rowCount={Math.ceil(metadatas?.length / 10)}
+                            rowHeight={150}
+                            width={1105}
+                            gap={10}
+                          >
+                            {jsonPreview}
+                          </GridVirtualList>
+                        ) : null}
+                      </>
+                    )}
+                  </div>
+                </div>
+                <button
+                  className={styles.button}
+                  onClick={handleUploadFiles}
+                  type="button"
+                >
+                  Upload files
+                </button>
+              </>
+            )}
           </>
         )}
       </div>
