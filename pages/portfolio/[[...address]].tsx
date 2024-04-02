@@ -46,7 +46,6 @@ import { setIsAuth } from '../../redux/slices/auth'
 import { useAppDispatch } from '../../redux/store'
 import { shallowEqual, useSelector } from 'react-redux'
 import { isAuthSelector } from '../../redux/selectors/authSelectors'
-import { shallow } from 'zustand/shallow'
 import { SavedArts } from '../../components/modals/SavedArts'
 
 type ActivityTypes = Exclude<

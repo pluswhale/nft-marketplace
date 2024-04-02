@@ -129,8 +129,6 @@ export const SavedArts: FC = (): ReactElement => {
     setSavedArts((prev) => prev.filter((art) => art.cid !== cid))
   }
 
-  console.log('art', savedArts)
-
   return (
     <div
       style={{
