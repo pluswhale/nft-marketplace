@@ -37,6 +37,7 @@ const Dropzone: FC<Props> = ({
           <input
             className={styles.dropzone__input}
             {...getInputProps()}
+            //@ts-ignore
             directory=""
             webkitdirectory=""
             type={'file'}

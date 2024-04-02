@@ -151,14 +151,6 @@ export function UploadFilesModal({ onClose }: Props) {
     (acceptedFiles: File[]) => {
       setIsLoadingImages(true)
 
-      // const filteredFiles = acceptedFiles.filter((newFile) => {
-      //   return !images.some(
-      //     (existingFile) =>
-      //       existingFile.name === newFile.name &&
-      //       existingFile.size === newFile.size
-      //   )
-      // })
-
       // Organize files by folders
       const filesByFolder = acceptedFiles.reduce((acc: any, file: any) => {
         // Extract folder name from file path; this depends on your environment
