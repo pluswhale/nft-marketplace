@@ -32,11 +32,32 @@ import axios from 'axios'
 import { sortFilesByName } from '../../../utils/sortFileByName'
 import { capitalizeFirstLetter } from '../../../utils/capitalizeFirstLetterInString'
 
+function fetchWithTimeout(resource: any, options = {}, timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    // Set timeout timer
+    const timer = setTimeout(() => {
+      reject(new Error('Operation timed out'))
+    }, timeout)
+
+    fetch(resource, options)
+      .then((response) => {
+        clearTimeout(timer)
+        resolve(response)
+      })
+      .catch((err) => {
+        clearTimeout(timer)
+        reject(err)
+      })
+  })
+}
+
 type Props = {
   onClose: () => void
 }
 
 const LENGTH_OF_MOCK_FILES = 10
+
+const IPFS_GATEWAY = 'https://ipfs.io/ipfs/'
 
 export function UploadFilesModal({ onClose }: Props) {
   const dispatch = useAppDispatch()
@@ -294,6 +315,37 @@ export function UploadFilesModal({ onClose }: Props) {
 
         const response = await axios.post('/api/storeArtToIpfs', formData)
 
+        let metadataUrl,
+          imageUrl = '',
+          metadataAttributes = []
+
+        if (response.data?.ipnft) {
+          try {
+            const ipfsDataByCid: any = await fetch(
+              `/api/fetchArtByCid?path=${response.data?.ipnft}`
+            )
+
+            const decodedData = await ipfsDataByCid.json()
+            const { 'metadata.json': metadataJson } = decodedData
+
+            if (metadataJson && metadataJson['/']) {
+              metadataUrl = `${IPFS_GATEWAY}${metadataJson['/']}`
+              try {
+                const metadataResponse: any = await fetch(metadataUrl)
+                const metadata = await metadataResponse.json()
+                if (metadata.attributes)
+                  metadataAttributes = metadata.attributes
+                if (metadata.image)
+                  imageUrl = IPFS_GATEWAY + metadata.image.split('://')?.[1]
+              } catch (error) {
+                console.error('Error fetching metadata:', error)
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching decoded data:', error)
+          }
+        }
+
         if (response.data?.ipnft) {
           const savedData = {
             userId: authUserId,
@@ -301,6 +353,8 @@ export function UploadFilesModal({ onClose }: Props) {
             name: metadataJson?.name,
             description: metadataJson.description,
             cid: response?.data?.ipnft,
+            imageUrl: imageUrl,
+            metadataUrl: response?.data?.ipnft + '/metadata.json',
             resolution: metadataJson?.resolution,
             minted: false,
           } as any

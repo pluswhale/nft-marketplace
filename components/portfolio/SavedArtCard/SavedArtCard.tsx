@@ -11,6 +11,7 @@ type Props = {
     name: string
     createdAt: string
     themeName: string | null
+    imageUrl: string
     resolution?: string
     imageIpfsUrl?: string
     minted: boolean
@@ -24,6 +25,7 @@ export const SavedArtCard: FC<Props> = ({ art, onDelete }): ReactElement => {
     resolution,
     createdAt,
     imageIpfsUrl,
+    imageUrl,
     cid,
     name,
     description,
@@ -34,8 +36,11 @@ export const SavedArtCard: FC<Props> = ({ art, onDelete }): ReactElement => {
   return (
     <div className={styles.savedArt}>
       <div className={styles.savedArt__content}>
-        {imageIpfsUrl ? (
-          <img className={styles.savedArt__cover} src={art.imageIpfsUrl} />
+        {imageUrl ? (
+          <img
+            className={styles.savedArt__cover}
+            src={'https://ipfs.io/ipfs/' + imageUrl}
+          />
         ) : null}
         <p className={styles.savedArt__text}>Name: {name}</p>
         <p className={styles.savedArt__text}>Description: {description}</p>

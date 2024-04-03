@@ -20,99 +20,13 @@ export const SavedArts: FC = (): ReactElement => {
 
   const userId = useSelector(authUserIdSelector, shallowEqual)
 
-  function fetchWithTimeout(resource: any, options = {}, timeout = 5000) {
-    return new Promise((resolve, reject) => {
-      // Set timeout timer
-      const timer = setTimeout(() => {
-        reject(new Error('Operation timed out'))
-      }, timeout)
-
-      fetch(resource, options)
-        .then((response) => {
-          clearTimeout(timer)
-          resolve(response)
-        })
-        .catch((err) => {
-          clearTimeout(timer)
-          reject(err)
-        })
-    })
-  }
-
-  // Then, use fetchWithTimeout instead of fetch in your useEffect
-
   useEffect(() => {
     setIsLoading(true)
     uploadNFT
       .getAllSavedArts(userId, page)
-      .then(async (res) => {
-        if (res.data.items) {
-          const promises = res.data.items.map(async (art: any) => {
-            let themeName = ''
-            if (art.themeId) {
-              try {
-                const themeResponse = await uploadNFT.getCollectionThemeById(
-                  art.themeId as number
-                )
-                themeName =
-                  themeResponse?.data?.collectionTheme?.name?.replace(
-                    '_',
-                    ' '
-                  ) || ''
-              } catch (error) {
-                console.error('Error fetching theme name:', error)
-                // Handle the error appropriately, maybe set a default theme name or leave it empty
-              }
-            }
-
-            if (art.cid) {
-              try {
-                const response: any = await fetchWithTimeout(
-                  `/api/fetchArtByCid?path=${art.cid}`
-                )
-                if (!response.ok)
-                  throw new Error('Response from API was not ok')
-                const decodedData = await response.json()
-                const { 'metadata.json': metadataJson } = decodedData
-
-                let metadataUrl,
-                  imageUrl = '',
-                  metadataAttributes = []
-                if (metadataJson && metadataJson['/']) {
-                  metadataUrl = `${IPFS_GATEWAY}${metadataJson['/']}`
-                  try {
-                    const metadataResponse: any = await fetchWithTimeout(
-                      metadataUrl
-                    )
-                    const metadata = await metadataResponse.json()
-                    if (metadata.attributes)
-                      metadataAttributes = metadata.attributes
-                    if (metadata.image)
-                      imageUrl = IPFS_GATEWAY + metadata.image.split('://')[1]
-                  } catch (error) {
-                    console.error('Error fetching metadata:', error)
-                    // If metadata fetch fails, proceed without imageUrl and metadataAttributes
-                  }
-                }
-
-                return {
-                  ...art,
-                  imageIpfsUrl: imageUrl,
-                  metadataAttributes,
-                  themeName,
-                }
-              } catch (error) {
-                console.error('Error fetching decoded data:', error)
-                return art // In case of an error, return unmodified art object
-              }
-            } else {
-              return { ...art, themeName }
-            }
-          })
-
-          const uplgradedItems = await Promise.all(promises)
-          setSavedArts((prev) => [...prev, ...uplgradedItems])
-        }
+      .then((res) => {
+        setSavedArts((prev) => [...prev, ...res.data.items])
+        // }
       })
       .finally(() => {
         setIsLoading(false)
@@ -177,3 +91,69 @@ export const SavedArts: FC = (): ReactElement => {
     </div>
   )
 }
+
+// if (res.data.items) {
+//   const promises = res.data.items.map(async (art: any) => {
+//     let themeName = ''
+//     if (art.themeId) {
+//       try {
+//         const themeResponse = await uploadNFT.getCollectionThemeById(
+//           art.themeId as number
+//         )
+//         themeName =
+//           themeResponse?.data?.collectionTheme?.name?.replace(
+//             '_',
+//             ' '
+//           ) || ''
+//       } catch (error) {
+//         console.error('Error fetching theme name:', error)
+//         // Handle the error appropriately, maybe set a default theme name or leave it empty
+//       }
+//     }
+//
+//     if (art.cid) {
+//       try {
+//         const response: any = await fetchWithTimeout(
+//           `/api/fetchArtByCid?path=${art.cid}`
+//         )
+//         if (!response.ok)
+//           throw new Error('Response from API was not ok')
+//         const decodedData = await response.json()
+//         const { 'metadata.json': metadataJson } = decodedData
+//
+//         let metadataUrl,
+//           imageUrl = '',
+//           metadataAttributes = []
+//         if (metadataJson && metadataJson['/']) {
+//           metadataUrl = `${IPFS_GATEWAY}${metadataJson['/']}`
+//           try {
+//             const metadataResponse: any = await fetchWithTimeout(
+//               metadataUrl
+//             )
+//             const metadata = await metadataResponse.json()
+//             if (metadata.attributes)
+//               metadataAttributes = metadata.attributes
+//             if (metadata.image)
+//               imageUrl = IPFS_GATEWAY + metadata.image.split('://')[1]
+//           } catch (error) {
+//             console.error('Error fetching metadata:', error)
+//             // If metadata fetch fails, proceed without imageUrl and metadataAttributes
+//           }
+//         }
+//
+//         return {
+//           ...art,
+//           imageIpfsUrl: imageUrl,
+//           metadataAttributes,
+//           themeName,
+//         }
+//       } catch (error) {
+//         console.error('Error fetching decoded data:', error)
+//         return art // In case of an error, return unmodified art object
+//       }
+//     } else {
+//       return { ...art, themeName }
+//     }
+//   })
+//
+//   const uplgradedItems = await Promise.all(promises)
